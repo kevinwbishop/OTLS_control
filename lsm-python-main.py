@@ -1,52 +1,46 @@
 #!/usr/bin/python
 
-import lsmfx
-from lsmfx import experiment
-from lsmfx import camera
-from lsmfx import daq
-from lsmfx import laser
-from lsmfx import wheel
-from lsmfx import etl
-from lsmfx import stage
+import scope
+from scope import experiment
+from scope import camera
+from scope import daq
+from scope import laser
+from scope import wheel
+from scope import etl
+from scope import stage
 
+############# SCAN PARAMETERS #############
 
-# NEW VERSION
-
-um_per_px = 0.3846 # microns        0.43 for water, 0.3846 for ECi
+experiment.drive = 'C'
+experiment.fname = 'code_test' # specimen names
+experiment.xMin = -1.0 # mm
+experiment.xMax = 0.0 # mm
+experiment.yMin = -1.0 # mm
+experiment.yMax = 0.0 # mm
+experiment.zMin = 0 # mm
+experiment.zMax = 0.15 # mm
+experiment.xWidth = 2.14 # microns
+experiment.yWidth = 3.0 # mm
+experiment.zWidth = 0.15 # mm
+experiment.wavelengths = {'488': 20.0, '561': 20.0, '638': 20.0}
+experiment.attenuations = {'488': 1000.0, '561': 1000.0, '638': 1000.0}
+experiment.theta = 45.0 # light sheet angle
 
 # CAMERA PARAMETERS
 camera.number = 0
-camera.sampling = um_per_px
-camera.expTime = 10.0 # ms
-camera.Y = 256
-camera.X = 2048
+camera.sampling = 2.10 # pix 2 micron sampling on camera
+camera.expTime = 4.99 # ms
+camera.Y = 128
+camera.X = 1536
 camera.shutterMode = 'top middle bottom middle'
 camera.triggerMode = 'auto sequence'
 camera.acquireMode = 'external'
 camera.compressionMode = 1
-camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
-
-# ROI PARAMETERS
-experiment.drive = 'K'
-experiment.fname = 'AFM030B_2mW' # specimen names
-experiment.overlap = 30 # number of px overlap in Y and Z between tiles
-experiment.xMin = -3.8 # mm
-experiment.xMax = -0.6 # mm
-experiment.yMin = -0.7 # mm
-experiment.yMax = 2.5 # mm
-experiment.zMin = -0.03 # mm
-experiment.zMax = 1.50 # mm
-experiment.xWidth = um_per_px # um
-experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000 # mm
-experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) * um_per_px / 1000 # mm
-experiment.wavelengths = {'488': 2.0, '638': 2.0}		# set experiment wavelenths here
-experiment.attenuations = {'405': 1000.0, '488': 1000.0, '561': 1000.0, '638': 1000.0}
-experiment.theta = 45.0 # light sheet angle
-
+camera.quantSigma = {'488': 1.0, '561': 1.0, '638': 1.0}
 
 # VOLTAGE PARAMETERS
 daq.rate = 4e5 # Hz
-daq.board = 'Dev3'
+daq.board = 'Dev2'
 daq.num_channels = 32 # AO channels
 daq.names_to_channels = {'xgalvo': 0,
 						 'ygalvo': 1,
@@ -55,30 +49,20 @@ daq.names_to_channels = {'xgalvo': 0,
 						 'camera0_ex': 4,
 						 'camera0_aq': 5,
 						 'etl': 6,
-						 'daq_active': 7,	#adjusting behavior of this!
+						 'stage': 7,
 						 '405': 8, 
 						 '488': 9,
 						 '561': 11,
 						 '638': 12}
-daq.xamplitude = {'405': 0.1400, '488': 0.3000, '561': 0.1400, '638': 0.3000}
-daq.xoffset =    {'405': -0.040, '488': 1.1750, '561': -0.040, '638': 1.1750} # Volts
-daq.yamplitude = {'405': 0.0017, '488': 0.0195, '561': 0.0200, '638': 0.0195} # Volts
-daq.yoffset =    {'405': 0.1200, '488': 0.0650, '561': 0.0575, '638': 0.0650} # Volts
-daq.eamplitude = {'405': 0.0000, '488': 0.0000, '561': 0.0000, '638': 0.0000} # Volts
-daq.eoffset =    {'405': 2.6300, '488': 2.5000, '561': 2.5850, '638': 2.5000} # Volts
-
-'''
-water 5/11/22
-daq.xamplitude = {'405': 0.1400, '488': 0.1400, '561': 0.1400, '638': 0.3000}
-daq.xoffset =    {'405': -0.040, '488': -0.040, '561': -0.040, '638': 1.1800} # Volts
-daq.yamplitude = {'405': 0.0017, '488': 0.0017, '561': 0.0017, '638': 0.0200} # Volts
-daq.yoffset =    {'405': 0.1200, '488': 0.1300, '561': 0.1310, '638': 0.0660} # Volts
-daq.eamplitude = {'405': 0.0000, '488': 0.0000, '561': 0.0000, '638': 0.0000} # Volts
-daq.eoffset =    {'405': 2.6300, '488': 2.5600, '561': 2.5850, '638': 2.5050} # Volts
-'''
+daq.xamplitude = {'405': 1.700, '488': 1.700, '561': 1.700, '638': 1.700} # Volts
+daq.xoffset =    {'405': -0.06, '488': -0.06, '561': -0.05, '638': -0.06} # Volts
+daq.yamplitude = {'405': 0.020, '488': 0.010, '561': 0.010, '638': 0.010} # Volts
+daq.yoffset =    {'405': 0.125, '488': -0.02, '561': -0.08, '638': -0.10} # Volts
+daq.eamplitude = {'405': 0.000, '488': 0.000, '561': 0.000, '638': 0.000} # Volts
+daq.eoffset =    {'405': 2.635, '488': 2.480, '561': 2.480, '638': 2.500} # Volts
 
 # LASER PARAMETERS
-laser.port = 'COM4'
+laser.port = 'COM15'
 laser.rate = 9600
 laser.names_to_channels = {'405': 4,
 						   '488': 3,
@@ -91,7 +75,7 @@ laser.max_powers = {'405': 50.0,
 					'638': 50.0}
 
 # FILTER WHEEL PARAMETERS
-wheel.port = 'COM6'
+wheel.port = 'COM8'
 wheel.rate = 115200
 wheel.names_to_channels = {'405': 1,
 						   '488': 2,
@@ -101,12 +85,12 @@ wheel.names_to_channels = {'405': 1,
 						   'none': 6}
 
 # ETL PARAMETERS
-etl.port = 'COM5'
+etl.port = 'COM14'
 
 # XYZ STAGE PARAMETERS
-stage.port = 'COM3'
-stage.rate = 115200
+stage.port = 'COM13'
+stage.rate = 9600
 
 ############ BEGIN SCANNING ##############
 
-lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
+scope.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
