@@ -21,24 +21,62 @@ import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
 
+# TODO : change input to be one 'settings' dictionary with
+# cont: key entries for each variable, this will clean up code quite a bit
+
 
 class experiment(object):
-    def __init__(self, drive = [], 
-                       fname = [], 
-                       xMin = [], 
-                       xMax = [], 
-                       yMin = [], 
-                       yMax = [], 
-                       zMin = [], 
-                       zMax = [], 
-                       xWidth = [], 
-                       yWidth = [], 
-                       zWidth = [], 
-                       wavelengths = [], 
-                       powers = [], 
-                       attenuations = [], 
-                       theta = [], 
-                       overlap = []):
+    """
+    A descriptive sentence
+
+    Parameters
+    ----------
+
+    drive
+
+    fname
+
+    xMin
+
+    xMax
+
+    yMin
+
+    YMax
+
+    zMin
+
+    zMax
+
+    wavelengths
+
+    powers
+
+    attenuations
+
+    theta
+
+    overlap
+    """
+
+    def __init__(self,
+                 drive=[],
+                 fname=[],
+                 xMin=[],
+                 xMax=[],
+                 yMin=[],
+                 yMax=[],
+                 zMin=[],
+                 zMax=[],
+                 xWidth=[],
+                 yWidth=[],
+                 zWidth=[],
+                 wavelengths=[],
+                 powers=[],
+                 attenuations=[],
+                 theta=[],
+                 overlap=[]):
+
         self.drive = drive
         self.fname = fname
         self.xMin = xMin
@@ -56,8 +94,25 @@ class experiment(object):
         self.theta = theta
         self.overlap = overlap
 
+
 class scan(object):
-    def __init__(self, xLength = [], yLength = [], zLength = [], xOff = [], yOff = [], zOff = [], nFrames = [], nWavelengths = [], yTiles = [], zTiles = [], scanSpeed = [], chunkSize1 = [], chunkSize2 = [], chunkSize3  = [], blockSize = []):
+    def __init__(self,
+                 xLength=[],
+                 yLength=[],
+                 zLength=[],
+                 xOff=[],
+                 yOff=[],
+                 zOff=[],
+                 nFrames=[],
+                 nWavelengths=[],
+                 yTiles=[],
+                 zTiles=[],
+                 scanSpeed=[],
+                 chunkSize1=[],
+                 chunkSize2=[],
+                 chunkSize3=[],
+                 blockSize=[]):
+
         self.xLength = xLength
         self.yLength = yLength
         self.zLength = zLength
@@ -74,44 +129,69 @@ class scan(object):
         self.chunkSize3 = chunkSize3
         self.blockSize = blockSize
 
+
 class camera(object):
-    def __init__(self, number = [], X = [], Y = [], sampling = [], expTime = [], triggerMode = [], acquireMode = []):
+    def __init__(self,
+                 number=[],
+                 X=[],
+                 Y=[],
+                 sampling=[],
+                 expTime=[],
+                 triggerMode=[],
+                 acquireMode=[]):
+
         self.number = number
         self.X = X
-        self.Y = Y	
+        self.Y = Y
         self.sampling = sampling
         self.expTime = expTime
         self.triggerMode = triggerMode
         self.acquireMode = acquireMode
 
+
 class daq(object):
-    def __init__(self, rate = [], name = [], board = [], num_channels = [], names_to_channels = []):
+    def __init__(self,
+                 rate=[],
+                 name=[],
+                 board=[],
+                 num_channels=[],
+                 names_to_channels=[]):
+
         self.rate = rate
         self.board = board
         self.name = name
         self.num_channels = num_channels	
         self.names_to_channels = names_to_channels
 
+
 class laser(object):
-    def __init__(self,  port = [], rate = [], names_to_channels = []):
+    def __init__(self,
+                 port=[],
+                 rate=[],
+                 names_to_channels=[]):
+
         self.port = port
         self.rate = rate
         self.names_to_channels = names_to_channels
+
 
 class etl(object):
-    def __init__(self, port = []):
+    def __init__(self, port=[]):
         self.port = port
 
+
 class wheel(object):
-    def __init__(self, port = [], rate = [], names_to_channels = []):
+    def __init__(self, port=[], rate=[], names_to_channels=[]):
         self.port = port
         self.rate = rate
         self.names_to_channels = names_to_channels
 
+
 class stage(object):
-    def __init__(self, port = [], rate = []):
+    def __init__(self, port=[], rate=[]):
         self.port = port
         self.rate = rate
+
 
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
