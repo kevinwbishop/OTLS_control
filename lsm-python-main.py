@@ -15,21 +15,21 @@ from lsmfx import stage
 um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
 # CAMERA PARAMETERS
-camera.number = 0
+camera.number = 0 ##
 camera.sampling = um_per_px
 camera.expTime = 10.0  # ms
-camera.Y = 256
-camera.X = 2048
-camera.shutterMode = 'top middle bottom middle'
-camera.triggerMode = 'auto sequence'
-camera.acquireMode = 'external'
-camera.compressionMode = 1
+camera.Y = 256 ##
+camera.X = 2048 ##
+camera.shutterMode = 'top middle bottom middle' ##
+camera.triggerMode = 'auto sequence' ##
+camera.acquireMode = 'external' ##
+camera.compressionMode = 1 ##
 camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # ROI PARAMETERS
 experiment.drive = 'K'
 experiment.fname = 'AFM030B_2mW'  # specimen names
-experiment.overlap = 30  # number of px overlap in Y and Z between tiles
+experiment.overlap = 30  # number of px overlap in Y and Z between tiles ##
 experiment.xMin = -3.8  # mm
 experiment.xMax = -0.6  # mm
 experiment.yMin = -0.7  # mm
@@ -49,14 +49,14 @@ experiment.attenuations = {'405': 1000.0,
                            '488': 1000.0,
                            '561': 1000.0,
                            '638': 1000.0}
-experiment.theta = 45.0  # light sheet angle
+experiment.theta = 45.0  # light sheet angle ##
 
 
 # VOLTAGE PARAMETERS
-daq.rate = 4e5  # Hz
-daq.board = 'Dev3'
-daq.num_channels = 32  # AO channels
-daq.names_to_channels = {'xgalvo': 0,
+daq.rate = 4e5  # Hz ##
+daq.board = 'Dev3' ##
+daq.num_channels = 32  # AO channels ##
+daq.names_to_channels = {'xgalvo': 0, ##
                          'ygalvo': 1,
                          'camera2_ex': 2,
                          'camera2_aq': 3,
