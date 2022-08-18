@@ -129,6 +129,35 @@ class scan(object):
         self.chunkSize3 = chunkSize3
         self.blockSize = blockSize
 
+    def initialize(self, experiment):
+        self.xLength = experiment.xMax - experiment.xMin  # mm
+        self.yLength = round((experiment.yMax - experiment.yMin)/experiment.yWidth)*experiment.yWidth  # mm
+        self.zLength = round((experiment.zMax - experiment.zMin)/experiment.zWidth)*experiment.zWidth  # mm
+        self.xOff = experiment.xMax - (self.xLength)/2
+        self.yOff = experiment.yMax - self.yLength/2
+        self.zOff = experiment.zMin
+        self.nFrames = int(numpy.floor(self.xLength/(experiment.xWidth/1000.0)))
+        self.nWavelengths = len(experiment.wavelengths)
+        self.yTiles = int(round(self.yLength/experiment.yWidth))
+        self.zTiles = int(round(self.zLength/experiment.zWidth))
+        self.scanSpeed = experiment.xWidth/(1.0/(1.0/(
+                                                    (camera.expTime+10.0e-3)/1000.0)
+                                                 )*1000.0)
+        self.chunkSize1 = 256
+        if self.chunkSize1 >= self.nFrames/8:
+            self.chunkSize1 = numpy.floor(self.nFrames/8)
+
+        self.chunkSize2 = 16
+
+        if self.chunkSize2 >= camera.Y/8:
+            self.chunkSize2 = numpy.floor(camera.Y/8)
+
+        self.chunkSize3 = 256
+        if self.chunkSize3 >= camera.X/8:
+            self.chunkSize3 = numpy.floor(camera.X/8)
+
+        self.blockSize = int(2*self.chunkSize1)
+
 
 class camera(object):
     def __init__(self,
@@ -160,7 +189,7 @@ class daq(object):
         self.rate = rate
         self.board = board
         self.name = name
-        self.num_channels = num_channels	
+        self.num_channels = num_channels
         self.names_to_channels = names_to_channels
 
 
@@ -210,14 +239,16 @@ class stage(object):
         return xyzStage, initialPos
 
 
-
+# TODO: break apart into smaller pieces:
+# initialize hardware
+# scan tiles
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
-    ######### ROUND SCAN DIMENSIONS ###########
-
-    scan.xLength = experiment.xMax - experiment.xMin # mm
-    scan.yLength = round((experiment.yMax - experiment.yMin)/experiment.yWidth)*experiment.yWidth # mm
-    scan.zLength = round((experiment.zMax - experiment.zMin)/experiment.zWidth)*experiment.zWidth # mm
+    # ROUND SCAN DIMENSIONS
+    #  TODO: create initialize scan function and dump all this in there
+    scan.xLength = experiment.xMax - experiment.xMin  # mm
+    scan.yLength = round((experiment.yMax - experiment.yMin)/experiment.yWidth)*experiment.yWidth  # mm
+    scan.zLength = round((experiment.zMax - experiment.zMin)/experiment.zWidth)*experiment.zWidth  # mm
     scan.xOff = experiment.xMax - (scan.xLength)/2
     scan.yOff = experiment.yMax - scan.yLength/2
     scan.zOff = experiment.zMin
@@ -225,7 +256,9 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     scan.nWavelengths = len(experiment.wavelengths)
     scan.yTiles = int(round(scan.yLength/experiment.yWidth))
     scan.zTiles = int(round(scan.zLength/experiment.zWidth))
-    scan.scanSpeed = experiment.xWidth/(1.0/(1.0/((camera.expTime+10.0e-3)/1000.0))*1000.0)
+    scan.scanSpeed = experiment.xWidth/(1.0/(1.0/(
+                                                  (camera.expTime+10.0e-3)/1000.0)
+                                                  )*1000.0)
     scan.chunkSize1 = 256
     if scan.chunkSize1 >= scan.nFrames/8:
         scan.chunkSize1 = numpy.floor(scan.nFrames/8)
@@ -237,39 +270,41 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         scan.chunkSize3 = numpy.floor(camera.X/8)
     scan.blockSize = int(2*scan.chunkSize1)
 
-    ########## SETUP DATA DIRECTORY ###########
-
-    #if os.path.exists(experiment.drive + ':\\' + experiment.fname):
-        #shutil.rmtree(experiment.drive + ':\\' + experiment.fname, ignore_errors = True)
+    # SETUP DATA DIRECTORY
+    # TODO: this should be a method within experiment
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
 
-    ############# CONNECT XYZ STAGE #############
+    #  CONNECT XYZ STAGE
 
     xyzStage, initialPos = stage.initialize()
     print(xyzStage)
 
-    ########## INITIALIZE H5 FILE #############
+    #  INITIALIZE H5 FILE 
 
     h5init(dest, camera, scan, experiment)
-    write_xml(experiment = experiment, camera = camera, scan = scan)
+    write_xml(experiment=experiment, camera=camera, scan=scan)
 
     ############### CONNECT NIDAQ ###############
 
-    waveformGenerator = ni.waveformGenerator(daq = daq, camera = camera, triggered = True)
-    #waveformGenerator.write_zeros(daq = daq)
+    waveformGenerator = ni.waveformGenerator(daq=daq, camera=camera, triggered=True)
+    #  waveformGenerator.write_zeros(daq=daq)
 
-    
-    ############# CONNECT LASER #############
-    
-    #according to the manual, you should wait for 2min after setting laser 1 (561) to mod mode for power to stabalize. Consider adding this in
-    skyraLaser = skyra.Skyra(baudrate = laser.rate, port = laser.port)
+    #  CONNECT LASER
+
+    # according to the manual, you should wait for 2min after setting
+    # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
+    # TODO: disentangle laser and experiment attributes
+    skyraLaser = skyra.Skyra(baudrate=laser.rate, port=laser.port)
     for ch in list(laser.names_to_channels):
         skyraLaser.setModulationOn(laser.names_to_channels[ch])
-        skyraLaser.setDigitalModulation(laser.names_to_channels[ch],1)
-        skyraLaser.setAnalogModulation(laser.names_to_channels[ch],0)	#new, to ensure analog mod is not active
+        skyraLaser.setDigitalModulation(laser.names_to_channels[ch], 1)
+
+        #  new, to ensure analog mod is not active
+        skyraLaser.setAnalogModulation(laser.names_to_channels[ch], 0)
     for ch in list(experiment.wavelengths):
-        skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch], experiment.wavelengths[ch]/laser.max_powers[ch])
+        skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch],
+                                            experiment.wavelengths[ch]/laser.max_powers[ch])
         skyraLaser.turnOn(laser.names_to_channels[ch])
     for ch in list(experiment.wavelengths):
         skyraLaser.setModulationLowCurrent(laser.names_to_channels[ch], 0)
@@ -277,23 +312,21 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     ############ CONNECT FILTER WHEEL ###########
 
-    fWheel = fw102c.FW102C(baudrate = wheel.rate, port = wheel.port)
+    fWheel = fw102c.FW102C(baudrate=wheel.rate, port=wheel.port)
     print(fWheel)
 
     ############ CONNECT TUNBALE LENS ###########
 
-    etl = Opto(port = etl.port)
+    etl = Opto(port=etl.port)
     etl.connect()
     etl.mode('analog')
     print(etl)
 
 
 
-    ############## CONNECT CAMERA ##############
+    #  CONNECT CAMERA
 
-    #print('making cam')
     cam = pco.Camera(camera_number=camera.number)
-    #print(cam)
     
     cam.configuration = {'exposure time': camera.expTime*1.0e-3,
                  'roi': (1, 1023-round(camera.Y/2), 2060, 1026+round(camera.Y/2)),
@@ -301,13 +334,13 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                  'acquire': camera.acquireMode,
                  'pixel rate': 272250000}
     #print('configured cam')
-    cam.record(number_of_images = scan.nFrames, mode = 'sequence non blocking')
+    cam.record(number_of_images=scan.nFrames, mode='sequence non blocking')
     # possibly change mode to ring buffer??
     #print('made record') 
 
     ######## IMAGING LOOP #########
 
-    ring_buffer = numpy.zeros((scan.blockSize, camera.Y, camera.X), dtype = 'uint16')
+    ring_buffer = numpy.zeros((scan.blockSize, camera.Y, camera.X), dtype='uint16')
 
     #print('made ring buffer')
     tile = 0
@@ -337,7 +370,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
             #print('sent Y')
 
             for ch in range(scan.nWavelengths):
-
+                # why do velocity settings happen twice?
                 xyzStage.setVelocity('X', 1.0)
                 xPos = scan.xLength/2.0 - scan.xOff
                 xyzStage.goAbsolute('X', -xPos, False)
@@ -352,10 +385,20 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
                 ############## START SCAN ##############
 
-                skyraLaser.setModulationHighCurrent(laser.names_to_channels[list(experiment.wavelengths)[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/laser.max_powers[list(experiment.wavelengths)[ch]]/numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]]))
+                skyraLaser.setModulationHighCurrent(
+                                    laser.names_to_channels[
+                                                    list(
+                                                        experiment.wavelengths
+                                                        )[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/laser.max_powers[list(experiment.wavelengths)[ch]]/numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]])
+                                                )
                 
                 #print('set laser')
-                voltages, rep_time = write_voltages(daq = daq, laser=laser, camera = camera, experiment = experiment, scan = scan, ch = ch)
+                voltages, rep_time = write_voltages(daq=daq,
+                                                    laser=laser,
+                                                    camera=camera,
+                                                    experiment=experiment,
+                                                    scan=scan,
+                                                    ch=ch)
                 #print('writing voltages')
                 waveformGenerator.ao_task.write(voltages)
 
@@ -399,14 +442,17 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                         num_acquired_counter = 0
                         num_acquired_previous = num_acquired
                         temp = cam.image(num_acquired)[0]
-                        #ring_buffer[num_acquired_counter] = numpy.fliplr(temp[2:camera.Y+2, 1024-int(camera.X/2):1024-int(camera.X/2)+camera.X])
-                        ring_buffer[num_acquired_counter] = temp[2:camera.Y+2, 1024-int(camera.X/2):1024-int(camera.X/2)+camera.X]
+                        
+                        ring_buffer[num_acquired_counter] = temp[2:camera.Y+2,
+                                                                 1024-int(camera.X/2):1024
+                                                                 - int(camera.X/2)+camera.X]
 
                     else:
 
                         temp = cam.image(num_acquired)[0]
-                        #ring_buffer[num_acquired_counter] = numpy.fliplr(temp[2:camera.Y+2, 1024-int(camera.X/2):1024-int(camera.X/2)+camera.X])
-                        ring_buffer[num_acquired_counter] = temp[2:camera.Y+2, 1024-int(camera.X/2):1024-int(camera.X/2)+camera.X]
+
+                        ring_buffer[num_acquired_counter] = temp[2:camera.Y+2,
+                                                                 1024-int(camera.X/2):1024 -int(camera.X/2)+camera.X]
 
                     if num_acquired == scan.nFrames-1:
                         print('Saving frames: ' + str(num_acquired_previous) + ' - ' + str(scan.nFrames))
@@ -416,7 +462,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                     num_acquired_counter += 1
 
                 waveformGenerator.ao_task.stop()
-                waveformGenerator.write_zeros(daq = daq)
+                waveformGenerator.write_zeros(daq=daq)
                 # For some reason this write_zeros works but the above doesn't?
                 # laser stops and starts appropriately with this one active and the top write_zeros() commented out
 
@@ -441,7 +487,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         response = xyzStage.getMotorStatus()
 
     cam.close()
-    etl.close(soft_close=True)
+    etl.close(soft_close = True)
     # waveformGenerator.counter_task.close()
     waveformGenerator.ao_task.close()
     xyzStage.shutDown()
@@ -471,7 +517,7 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     period_samples = numpy.linspace(0, 2*math.pi, on_samples+2*buffer_samples)
     snap_back = numpy.linspace(daq.xoffset[list(experiment.wavelengths)[ch]]+daq.xamplitude[list(experiment.wavelengths)[ch]], daq.xoffset[list(experiment.wavelengths)[ch]]-daq.xamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
     voltages[n2c['xgalvo'],:] = daq.xoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['xgalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples] = -2*(daq.xamplitude[list(experiment.wavelengths)[ch]]/math.pi)*numpy.arctan(1.0/(numpy.tan(period_samples/2.0)))+daq.xoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['xgalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.xamplitude[list(experiment.wavelengths)[ch]]/math.pi)*numpy.arctan(1.0/(numpy.tan(period_samples/2.0)))+daq.xoffset[list(experiment.wavelengths)[ch]]
     voltages[n2c['xgalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
     voltages[n2c['xgalvo'], 0:roll_samples-galvo_samples-buffer_samples] = snap_back[samples-(roll_samples+on_samples-galvo_samples+buffer_samples):samples]
 
@@ -479,7 +525,7 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     period_samples = numpy.linspace(0, 2*math.pi, on_samples+2*buffer_samples)
     snap_back = numpy.linspace(daq.yoffset[list(experiment.wavelengths)[ch]]+daq.yamplitude[list(experiment.wavelengths)[ch]], daq.yoffset[list(experiment.wavelengths)[ch]]-daq.yamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
     voltages[n2c['ygalvo'],:] = daq.yoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['ygalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples] = -2*(daq.yamplitude[list(experiment.wavelengths)[ch]]/math.pi)*numpy.arctan(1.0/(numpy.tan(period_samples/2.0)))+daq.yoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['ygalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.yamplitude[list(experiment.wavelengths)[ch]]/math.pi)*numpy.arctan(1.0/(numpy.tan(period_samples/2.0)))+daq.yoffset[list(experiment.wavelengths)[ch]]
     voltages[n2c['ygalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
     voltages[n2c['ygalvo'], 0:roll_samples-galvo_samples-buffer_samples] = snap_back[samples-(roll_samples+on_samples-galvo_samples+buffer_samples):samples]
     
@@ -528,13 +574,13 @@ def h5init(dest, camera, scan, experiment):
 
     res_list = [1,2,4,8]
 
-    res_np = numpy.zeros((len(res_list), 3), dtype = 'float64')
+    res_np = numpy.zeros((len(res_list), 3), dtype='float64')
 
     res_np[:,0] = res_list
     res_np[:,1] = res_list
     res_np[:,2] = res_list
 
-    subdiv_np = numpy.zeros((len(res_list), 3), dtype = 'uint32')
+    subdiv_np = numpy.zeros((len(res_list), 3), dtype='uint32')
 
     subdiv_np[:, 0] = scan.chunkSize1
     subdiv_np[:, 1] = scan.chunkSize2
@@ -554,16 +600,16 @@ def h5init(dest, camera, scan, experiment):
 
                 sgroup = f.create_group('/s' + str(idx).zfill(2))
                 resolutions = f.require_dataset('/s' + str(idx).zfill(2) + '/resolutions', 
-                                                chunks = (res_np.shape), 
-                                                dtype = 'float64', 
-                                                shape = (res_np.shape), 
-                                                data = res_np)
+                                                chunks=(res_np.shape), 
+                                                dtype='float64', 
+                                                shape=(res_np.shape), 
+                                                data=res_np)
 
                 subdivisions = f.require_dataset('/s' + str(idx).zfill(2) + '/subdivisions', 
-                                                 chunks = (res_np.shape), 
-                                                 dtype = 'uint32', 
-                                                 shape = (subdiv_np.shape), 
-                                                 data = subdiv_np)
+                                                 chunks=(res_np.shape), 
+                                                 dtype='uint32', 
+                                                 shape=(subdiv_np.shape), 
+                                                 data=subdiv_np)
 
                 for z in range(len(res_list)-1, -1, -1):
 
@@ -571,29 +617,29 @@ def h5init(dest, camera, scan, experiment):
 
                     resgroup = f.create_group('/t00000/s' + str(idx).zfill(2) + '/' + str(z))
 
-                    if camera.quantSigma[list(experiment.wavelengths)[ch]] == 0:
+                    if camera.quantSigma[list(experiment.wavelengths)[ch]]  == 0:
 
                         data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells', 
-                                                 chunks = (scan.chunkSize1, 
+                                                 chunks=(scan.chunkSize1, 
                                                             scan.chunkSize2, 
                                                             scan.chunkSize3), 
-                                                 dtype = 'int16', 
-                                                 shape = numpy.ceil(numpy.divide([scan.nFrames, 
+                                                 dtype='int16', 
+                                                 shape=numpy.ceil(numpy.divide([scan.nFrames, 
                                                                                    camera.Y, 
                                                                                    camera.X],
                                                                                    res)))	
                     else:	
                         data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells', 
-                                                 chunks = (scan.chunkSize1, 
+                                                 chunks=(scan.chunkSize1, 
                                                             scan.chunkSize2, 
                                                             scan.chunkSize3), 
-                                                 dtype = 'int16', 
-                                                 shape = numpy.ceil(numpy.divide([scan.nFrames, 
+                                                 dtype='int16', 
+                                                 shape=numpy.ceil(numpy.divide([scan.nFrames, 
                                                                                    camera.Y, 
                                                                                    camera.X],
                                                                                    res)), 
-                                                 compression = 32016, 
-                                                 compression_opts = (round(camera.quantSigma[list(experiment.wavelengths)[ch]]*1000), 
+                                                 compression=32016, 
+                                                 compression_opts=(round(camera.quantSigma[list(experiment.wavelengths)[ch]]*1000), 
                                                                       camera.compressionMode, 
                                                                       round(2.1845*1000), 
                                                                       0, 
@@ -645,7 +691,7 @@ def write_xml(experiment, camera, scan):
     scale_y = sy/sy # normalized scaling in y
     scale_z = sz/sy # normalized scaning in z
 
-    shear = -numpy.tan(experiment.theta*numpy.pi/180.0)*sy/sz # shearing based on theta and y/z pixel sizes
+    shear=-numpy.tan(experiment.theta*numpy.pi/180.0)*sy/sz # shearing based on theta and y/z pixel sizes
 
     f = open(experiment.drive + ':\\' + experiment.fname + '\\data.xml', 'w')
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -729,7 +775,7 @@ def write_xml(experiment, camera, scan):
                 if ind <= scan.yTiles*scan.zTiles*scan.nWavelengths:
 
                     shiftx = scale_x*(ox/sx)*k # shift tile in x, unit pixels
-                    shifty = -scale_y*(oy/sy)*j # shift tile in y, unit pixels
+                    shifty=-scale_y*(oy/sy)*j # shift tile in y, unit pixels
 
                     f.write('\t\t<ViewRegistration timepoint="0" setup="' + str(ind) + '">\n')
 
