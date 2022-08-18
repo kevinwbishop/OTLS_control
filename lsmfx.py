@@ -191,6 +191,24 @@ class stage(object):
     def __init__(self, port=[], rate=[]):
         self.port = port
         self.rate = rate
+        self.settings = {'backlash': 0,
+                         'velocity': 1.0,
+                         'acceleration': 100
+                         }
+        self.axes = ('X', 'Y', 'Z')
+
+    def initialize(self):
+
+        xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
+        initialPos = xyzStage.getPosition()
+        xyzStage.setPLCPreset(6, 52)  # new command for Tiger
+        xyzStage.setScanF(1)
+        for ax in self.axes:
+            xyzStage.setBacklash(ax, self.settings['backlash'])
+            xyzStage.setVelocity(ax, self.settings['velocity'])
+            xyzStage.setAcceleration(ax, self.settings['acceleration'])
+        return xyzStage, initialPos
+
 
 
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
@@ -227,23 +245,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
 
     ############# CONNECT XYZ STAGE #############
-    
-    xyzStage = tiger.TIGER(baudrate = stage.rate, port = stage.port)
-    initialPos = xyzStage.getPosition()
-    #xyzStage.setTTL("Y",3)	#old command for MS2000
-    #print('setting TTL')
-    xyzStage.setPLCPreset(6,52)	#new command for Tiger
-    #print('set TTL')
-    xyzStage.setScanF(1)
-    xyzStage.setBacklash("X",0)
-    xyzStage.setBacklash("Y",0)
-    xyzStage.setBacklash("Z",0)
-    xyzStage.setVelocity("X", 1.0)
-    xyzStage.setVelocity("Y", 1.0)
-    xyzStage.setVelocity("Z", 0.1)
-    xyzStage.setAcceleration("X",100)
-    xyzStage.setAcceleration("Y",100)
-    xyzStage.setAcceleration("Z",100)
+
+    xyzStage, initialPos = stage.initialize()
     print(xyzStage)
 
     ########## INITIALIZE H5 FILE #############
