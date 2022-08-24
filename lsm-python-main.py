@@ -30,25 +30,25 @@ camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 experiment.drive = 'K'
 experiment.fname = 'power_testing'  # specimen names
 experiment.overlap = 30  # number of px overlap in Y and Z between tiles ##
-experiment.xMin = -0.1  # mm
+experiment.xMin = 0.0  # mm
 experiment.xMax = 0.1  # mm
 experiment.yMin = 0.0  # mm
-experiment.yMax = 0.75  # mm
-experiment.zMin = 0.0  # mm
-experiment.zMax = 0.2  # mm
+experiment.yMax = 0.5  # mm
+experiment.zMin = -1.0  # mm
+experiment.zMax = 0.0  # mm
 experiment.xWidth = um_per_px  # um
 experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
 experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) \
     * um_per_px / 1000  # mm
 
 # set experiment wavelenths here
-experiment.wavelengths = {'561': 1.0}
+experiment.wavelengths = {'638': 2.0}
 
 
-experiment.attenuations = {'405': 1000.0,
-                           '488': 1000.0,
-                           '561': 1000.0,
-                           '638': 1000.0}
+experiment.attenuations = {'405': 1.4,
+                           '488': 1.4,
+                           '561': 1.4,
+                           '638': 1.4}
 experiment.theta = 45.0  # light sheet angle ##
 
 
