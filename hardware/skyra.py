@@ -9,6 +9,9 @@ Cobolt Skyra control.
 
 """
 import hardware.RS232 as RS232
+import json
+from scipy import interpolate
+
 
 
 class Skyra(RS232.RS232):
@@ -34,6 +37,10 @@ class Skyra(RS232.RS232):
 
         except Exception:
             print("Failed to connect to the Cobolt Skyra!")
+
+        # import LUT
+        with open('skyra_LUT.json', 'r') as read_file:
+            self.LUT = json.load(read_file)
 
     def turnOn(self, wavelength):
         """
@@ -101,11 +108,15 @@ class Skyra(RS232.RS232):
     def setModulationHighCurrent(self, wavelength, power):
         """
         Set the modulation high current in mA.
+        power is power in mW (note - previous version used power as fraction of max power)
         """
-        waveMin = self.minCurrents[wavelength-1]
+
+        #waveMin = self.minCurrents[wavelength-1]
         waveMax = self.maxCurrents[wavelength-1]
 
-        current =  waveMin + power*(waveMax - waveMin)
+        #current =  waveMin + power*(waveMax - waveMin)
+        interp_func = interpolate.interp1d(self.LUT['ch' + str(wavelength)]['power'],self.LUT['ch' + str(wavelength)]['current'])
+        current = interp_func(power).item()
 
         assert current <= waveMax
         assert current > self.getModulationLowCurrent(wavelength)
@@ -124,8 +135,8 @@ class Skyra(RS232.RS232):
 
         print('Setting high current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
 
-        self.sendCommand(str(wavelength) + "smc " + str(current)) 
-        self.waitResponse() 
+        #self.sendCommand(str(wavelength) + "smc " + str(current)) 
+        #self.waitResponse() 
 
     def setModulationLowCurrent(self, wavelength, power):
         """
@@ -154,8 +165,8 @@ class Skyra(RS232.RS232):
 
         print('Setting low current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
 
-        self.sendCommand(str(wavelength) + "slth " + str(current))  
-        self.waitResponse() 
+        #self.sendCommand(str(wavelength) + "slth " + str(current))  
+        #self.waitResponse() 
         
 if (__name__ == "__main__"):
     laser = skyra()

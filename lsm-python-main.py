@@ -28,22 +28,22 @@ camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # ROI PARAMETERS
 experiment.drive = 'K'
-experiment.fname = 'AFM030B_2mW'  # specimen names
+experiment.fname = 'power_testing'  # specimen names
 experiment.overlap = 30  # number of px overlap in Y and Z between tiles ##
-experiment.xMin = -3.8  # mm
-experiment.xMax = -0.6  # mm
-experiment.yMin = -0.7  # mm
-experiment.yMax = 2.5  # mm
-experiment.zMin = -0.03  # mm
-experiment.zMax = 1.50  # mm
+experiment.xMin = -0.1  # mm
+experiment.xMax = 0.1  # mm
+experiment.yMin = 0.0  # mm
+experiment.yMax = 0.75  # mm
+experiment.zMin = 0.0  # mm
+experiment.zMax = 0.2  # mm
 experiment.xWidth = um_per_px  # um
 experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
 experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) \
     * um_per_px / 1000  # mm
 
 # set experiment wavelenths here
-experiment.wavelengths = {'488': 2.0,
-                          '638': 2.0}
+experiment.wavelengths = {'561': 1.0}
+
 
 experiment.attenuations = {'405': 1000.0,
                            '488': 1000.0,

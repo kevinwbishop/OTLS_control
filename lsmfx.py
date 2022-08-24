@@ -185,13 +185,15 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 	############# CONNECT LASER #############
 	
 	#according to the manual, you should wait for 2min after setting laser 1 (561) to mod mode for power to stabalize. Consider adding this in
+	#ch is channel number of laser
 	skyraLaser = skyra.Skyra(baudrate = laser.rate, port = laser.port)
 	for ch in list(laser.names_to_channels):
 		skyraLaser.setModulationOn(laser.names_to_channels[ch])
 		skyraLaser.setDigitalModulation(laser.names_to_channels[ch],1)
 		skyraLaser.setAnalogModulation(laser.names_to_channels[ch],0)	#new, to ensure analog mod is not active
 	for ch in list(experiment.wavelengths):
-		skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch], experiment.wavelengths[ch]/laser.max_powers[ch])
+		#skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch], experiment.wavelengths[ch]/laser.max_powers[ch])
+		skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch], experiment.wavelengths[ch])
 		skyraLaser.turnOn(laser.names_to_channels[ch])
 	for ch in list(experiment.wavelengths):
 		skyraLaser.setModulationLowCurrent(laser.names_to_channels[ch], 0)
@@ -259,6 +261,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 			#print('sent Y')
 
 			for ch in range(scan.nWavelengths):
+				# ch is order of wavelenghts in main (NOT necessarily Skyra channel number)
 
 				xyzStage.setVelocity('X', 1.0)
 				xPos = scan.xLength/2.0 - scan.xOff
@@ -274,7 +277,10 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
 				############## START SCAN ##############
 
-				skyraLaser.setModulationHighCurrent(laser.names_to_channels[list(experiment.wavelengths)[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/laser.max_powers[list(experiment.wavelengths)[ch]]/numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]]))
+				#skyraLaser.setModulationHighCurrent(laser.names_to_channels[list(experiment.wavelengths)[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/laser.max_powers[list(experiment.wavelengths)[ch]]/numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]]))
+				skyraLaser.setModulationHighCurrent(laser.names_to_channels[list(experiment.wavelengths)[ch]], \
+					experiment.wavelengths[list(experiment.wavelengths)[ch]] / \
+					numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]]))
 				
 				#print('set laser')
 				voltages, rep_time = write_voltages(daq = daq, laser=laser, camera = camera, experiment = experiment, scan = scan, ch = ch)
