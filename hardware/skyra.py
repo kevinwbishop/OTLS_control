@@ -182,8 +182,8 @@ class Skyra(RS232.RS232):
             ' to ' + str(current) + 'mA')
         assert current >= 0.0
 
-        #self.sendCommand(str(wavelength) + "slth " + str(current))  
-        #self.waitResponse() 
+        self.sendCommand(str(wavelength) + "slth " + str(current))  
+        self.waitResponse() 
 
     def power2current(self, wavelength, power):
         """
