@@ -244,6 +244,7 @@ class stage(object):
 # scan tiles
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
+
     # ROUND SCAN DIMENSIONS
     #  TODO: create initialize scan function and dump all this in there
     scan.xLength = experiment.xMax - experiment.xMin  # mm
@@ -304,7 +305,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         skyraLaser.setAnalogModulation(laser.names_to_channels[ch], 0)
     for ch in list(experiment.wavelengths):
         skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch],
-                                            experiment.wavelengths[ch]/laser.max_powers[ch])
+                                            experiment.wavelengths[ch])
         skyraLaser.turnOn(laser.names_to_channels[ch])
     for ch in list(experiment.wavelengths):
         skyraLaser.setModulationLowCurrent(laser.names_to_channels[ch], 0)
@@ -367,9 +368,11 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
             xyzStage.setVelocity('Y', 1.0)
             xyzStage.goAbsolute('Y', yPos, False)
 
+
             #print('sent Y')
 
             for ch in range(scan.nWavelengths):
+            	  # ch is order of wavelenghts in main (NOT necessarily Skyra channel number)
                 # why do velocity settings happen twice?
                 xyzStage.setVelocity('X', 1.0)
                 xPos = scan.xLength/2.0 - scan.xOff
@@ -389,7 +392,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                     laser.names_to_channels[
                                                     list(
                                                         experiment.wavelengths
-                                                        )[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/laser.max_powers[list(experiment.wavelengths)[ch]]/numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]])
+                                                        )[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/ \
+                                                        numpy.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]])
                                                 )
                 
                 #print('set laser')

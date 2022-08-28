@@ -9,6 +9,9 @@ Cobolt Skyra control.
 
 """
 import hardware.RS232 as RS232
+import json
+from scipy import interpolate
+
 
 
 class Skyra(RS232.RS232):
@@ -18,15 +21,15 @@ class Skyra(RS232.RS232):
     def __init__(self, **kwds):
 
         # min and max of linear range for current control, in order by laser #
-        self.minCurrents = [1180.0,
-                            101.0,
-                            32.0,
-                            37.0]
+        self.minCurrents = {1: 1180.0,
+                            2: 101.0,
+                            3: 32.0,
+                            4: 37.0}
 
-        self.maxCurrents = [2610.0,
-                            169.0,
-                            99.0,
-                            78.0]
+        self.maxCurrents = {1: 2610.0,
+                            2: 169.0,
+                            3: 99.0,
+                            4: 78.0}
 
         try:
             # open port
@@ -34,6 +37,10 @@ class Skyra(RS232.RS232):
 
         except Exception:
             print("Failed to connect to the Cobolt Skyra!")
+
+        # import LUT
+        with open('skyra_LUT.json', 'r') as read_file:
+            self.LUT = json.load(read_file)
 
     def turnOn(self, wavelength):
         """
@@ -52,6 +59,9 @@ class Skyra(RS232.RS232):
     def setPower(self, wavelength, power):
         """
         Set the laser power.
+
+        wavelength: Skyra channel number (1-4)
+        power: power in mW
         """
         power = power/1000 # convert to W
         self.sendCommand(str(wavelength) + "p " + str(power))
@@ -66,21 +76,21 @@ class Skyra(RS232.RS232):
 
     def setDigitalModulation(self, wavelength, mode):
         """
-        Set the modulation mode ON.
+        Set digital modulation mode.
         """
         self.sendCommand(str(wavelength) + "sdmes " + str(mode))
         self.waitResponse()       
 
     def setAnalogModulation(self, wavelength, mode):
         """
-        Set the modulation mode ON.
+        Set analog modulation mode.
         """
         self.sendCommand(str(wavelength) + "sames " + str(mode))
         self.waitResponse()  
 
     def getModulationHighCurrent(self, wavelength):
         """
-        Set the modulation high current in mA.
+        Get the modulation high current in mA.
         """
 
         response = self.commWithResp(str(wavelength) + "gmc?")
@@ -90,7 +100,7 @@ class Skyra(RS232.RS232):
 
     def getModulationLowCurrent(self, wavelength):
         """
-        Set the modulation high current in mA.
+        Get the modulation low current in mA.
         """
 
         response = self.commWithResp(str(wavelength) + "glth?")
@@ -101,11 +111,14 @@ class Skyra(RS232.RS232):
     def setModulationHighCurrent(self, wavelength, power):
         """
         Set the modulation high current in mA.
+        power is power in mW (note - previous version used power as fraction of max power)
         """
-        waveMin = self.minCurrents[wavelength-1]
-        waveMax = self.maxCurrents[wavelength-1]
 
-        current =  waveMin + power*(waveMax - waveMin)
+        #waveMin = self.minCurrents[wavelength]
+        waveMax = self.maxCurrents[wavelength]
+
+        #current =  waveMin + power*(waveMax - waveMin)
+        current = self.power2current(wavelength,power)
 
         assert current <= waveMax
         assert current > self.getModulationLowCurrent(wavelength)
@@ -120,9 +133,8 @@ class Skyra(RS232.RS232):
         if wavelength == 4:
             assert current <= 78.0
 
-        assert current >= 0.0
-
         print('Setting high current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
+        assert current >= 0.0
 
         self.sendCommand(str(wavelength) + "smc " + str(current)) 
         self.waitResponse() 
@@ -130,9 +142,25 @@ class Skyra(RS232.RS232):
     def setModulationLowCurrent(self, wavelength, power):
         """
         Set the modulation low current in mA.
+        Power is in mW
         """
+        current = self.power2current(wavelength,power)
 
         # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
+        if wavelength == 1:
+            assert current <= 2610.0
+            assert current < self.getModulationHighCurrent(1)
+        if wavelength == 2:
+            assert current <= 169.0
+            assert current < self.getModulationHighCurrent(2)
+        if wavelength == 3:
+            assert current <= 99.0
+            assert current < self.getModulationHighCurrent(3)
+        if wavelength == 4:
+            assert current <= 78.0
+            assert current < self.getModulationHighCurrent(4)
+
+        ''' old
         if wavelength == 1:
             current = 780.0 + power*(self.maxCurrents[0]-780.0)
             assert current <= 2610.0
@@ -148,14 +176,36 @@ class Skyra(RS232.RS232):
         if wavelength == 4:
             current = 0.0 + power*(self.maxCurrents[3])
             assert current <= 78.0
-            assert current < self.getModulationHighCurrent(1)
+            assert current < self.getModulationHighCurrent(1)'''
 
+        print('Setting low current for wavelength ' + str(wavelength) + \
+            ' to ' + str(current) + 'mA')
         assert current >= 0.0
-
-        print('Setting low current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
 
         self.sendCommand(str(wavelength) + "slth " + str(current))  
         self.waitResponse() 
+
+    def power2current(self, wavelength, power):
+        """
+        converts power in mW to current in mA using LUT for a given wavelength
+        """
+
+        min_interp = self.LUT['ch' + str(wavelength)]['power'][0]
+        max_interp = self.LUT['ch' + str(wavelength)]['power'][-1]
+
+        set_power = power / \
+            self.LUT['ch' + str(wavelength)]['measurement_factor']
+
+        if set_power == 0:
+            current = self.LUT['ch' + str(wavelength)]['zero_current']
+        elif set_power >= min_interp and set_power <= max_interp:
+            interp_func = interpolate.interp1d(
+                self.LUT['ch' + str(wavelength)]['power'],
+                self.LUT['ch' + str(wavelength)]['current'])
+            current = interp_func(set_power).item()
+        else:
+            raise Exception('Specified power out of range')
+        return current
         
 if (__name__ == "__main__"):
     laser = skyra()

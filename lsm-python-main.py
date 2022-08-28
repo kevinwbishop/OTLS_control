@@ -14,51 +14,52 @@ from lsmfx import stage
 
 um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
-
 #  TODO: identify which settings change with each experiment
 #  TODO: create experiment json file, and dump everything static into it
 
 # CAMERA PARAMETERS
-camera.number = 0
+camera.number = 0 ##
 camera.sampling = um_per_px
 camera.expTime = 10.0  # ms
-camera.Y = 256
-camera.X = 2048
-camera.shutterMode = 'top middle bottom middle'
-camera.triggerMode = 'auto sequence'
-camera.acquireMode = 'external'
-camera.compressionMode = 1
+camera.Y = 256 ##
+camera.X = 2048 ##
+camera.shutterMode = 'top middle bottom middle' ##
+camera.triggerMode = 'auto sequence' ##
+camera.acquireMode = 'external' ##
+camera.compressionMode = 1 ##
 camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # ROI PARAMETERS
 experiment.drive = 'K'
-experiment.fname = 'AFM030B_2mW'  # specimen names
-experiment.overlap = 30  # number of px overlap in Y and Z between tiles
-experiment.xMin = -3.8  # mm
-experiment.xMax = -0.6  # mm
-experiment.yMin = -0.7  # mm
-experiment.yMax = 2.5  # mm
-experiment.zMin = -0.03  # mm
-experiment.zMax = 1.50  # mm
+experiment.fname = 'power_testing'  # specimen names
+experiment.overlap = 30  # number of px overlap in Y and Z between tiles ##
+experiment.xMin = 0.0  # mm
+experiment.xMax = 0.1  # mm
+experiment.yMin = 0.0  # mm
+experiment.yMax = 0.5  # mm
+experiment.zMin = -1.0  # mm
+experiment.zMax = 0.0  # mm
 experiment.xWidth = um_per_px  # um
 experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
 experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) \
-                                         * um_per_px / 1000   # mm
+    * um_per_px / 1000  # mm
 
 # set experiment wavelenths here
-experiment.wavelengths = {'488': 2.0, '638': 2.0}
-experiment.attenuations = {'405': 1000.0,
-                           '488': 1000.0,
-                           '561': 1000.0,
-                           '638': 1000.0}
-experiment.theta = 45.0  # light sheet angle
+experiment.wavelengths = {'638': 2.0}
+
+
+experiment.attenuations = {'405': 1.4,
+                           '488': 1.4,
+                           '561': 1.4,
+                           '638': 1.4}
+experiment.theta = 45.0  # light sheet angle ##
 
 
 # VOLTAGE PARAMETERS
-daq.rate = 4e5  # Hz
-daq.board = 'Dev3'
-daq.num_channels = 32  # AO channels
-daq.names_to_channels = {'xgalvo': 0,
+daq.rate = 4e5  # Hz ##
+daq.board = 'Dev3' ##
+daq.num_channels = 32  # AO channels ##
+daq.names_to_channels = {'xgalvo': 0, ##
                          'ygalvo': 1,
                          'camera2_ex': 2,
                          'camera2_aq': 3,
@@ -70,6 +71,7 @@ daq.names_to_channels = {'xgalvo': 0,
                          '488': 9,
                          '561': 11,
                          '638': 12}
+
 
 # TODO: set immersion variable at beginning to read from json file
 # cont: to automatically set variables
