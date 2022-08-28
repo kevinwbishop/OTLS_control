@@ -14,6 +14,9 @@ from lsmfx import stage
 
 um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
+#  TODO: identify which settings change with each experiment
+#  TODO: create experiment json file, and dump everything static into it
+
 # CAMERA PARAMETERS
 camera.number = 0 ##
 camera.sampling = um_per_px
@@ -69,14 +72,39 @@ daq.names_to_channels = {'xgalvo': 0, ##
                          '561': 11,
                          '638': 12}
 
-# WAVEFORM PARAMETERS (in volts)
-daq.xamplitude = {'405': 0.1400, '488': 0.3000, '561': 0.1400, '638': 0.3000}
-daq.xoffset =    {'405': -0.040, '488': 1.1750, '561': -0.040, '638': 1.1750}
-daq.yamplitude = {'405': 0.0017, '488': 0.0195, '561': 0.0200, '638': 0.0195}
-daq.yoffset =    {'405': 0.1200, '488': 0.0650, '561': 0.0575, '638': 0.0650}
-daq.eamplitude = {'405': 0.0000, '488': 0.0000, '561': 0.0000, '638': 0.0000}
-daq.eoffset =    {'405': 2.6300, '488': 2.5000, '561': 2.5850, '638': 2.5000}
 
+# TODO: set immersion variable at beginning to read from json file
+# cont: to automatically set variables
+# all daq amplitudes are in Volts
+daq.xamplitude = {'405': 0.1400,
+                  '488': 0.3000,
+                  '561': 0.1400,
+                  '638': 0.3000}
+
+daq.xoffset = {'405': -0.040,
+               '488': 1.1750,
+               '561': -0.040,
+               '638': 1.1750}
+
+daq.yamplitude = {'405': 0.0017,
+                  '488': 0.0195,
+                  '561': 0.0200,
+                  '638': 0.0195}
+
+daq.yoffset = {'405': 0.1200,
+               '488': 0.0650,
+               '561': 0.0575,
+               '638': 0.0650}
+
+daq.eamplitude = {'405': 0.0000,
+                  '488': 0.0000,
+                  '561': 0.0000,
+                  '638': 0.0000}
+
+daq.eoffset = {'405': 2.6300,
+               '488': 2.5000,
+               '561': 2.5850,
+               '638': 2.5000}
 
 # LASER PARAMETERS
 laser.port = 'COM4'
@@ -91,7 +119,7 @@ laser.max_powers = {'405': 50.0,
                     '561': 50.0,
                     '638': 50.0}
 
-# FILTER WHEEL PARAMETERS
+# FILTER WHEEL PARAMETERS #TODO: this is likely static, move to json
 wheel.port = 'COM6'
 wheel.rate = 115200
 wheel.names_to_channels = {'405': 1,
@@ -101,13 +129,13 @@ wheel.names_to_channels = {'405': 1,
                            '660': 5,
                            'none': 6}
 
-# ETL PARAMETERS
+# ETL PARAMETERS #TODO: again static move to json
 etl.port = 'COM5'
 
-# XYZ STAGE PARAMETERS
+# XYZ STAGE PARAMETERS #TODO: static move to json
 stage.port = 'COM3'
 stage.rate = 115200
 
-# BEGIN SCANNING #
+""" BEGIN SCANNING """
 
 lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
