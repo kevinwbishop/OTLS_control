@@ -197,11 +197,15 @@ class laser(object):
     def __init__(self,
                  port=[],
                  rate=[],
-                 names_to_channels=[]):
+                 names_to_channels=[],
+                 max_powers=[],
+                 strobing=[]):
 
         self.port = port
         self.rate = rate
         self.names_to_channels = names_to_channels
+        self.max_powers = max_powers
+        self.strobing = strobing
 
 
 class etl(object):
