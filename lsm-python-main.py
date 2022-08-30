@@ -118,6 +118,7 @@ laser.max_powers = {'405': 50.0,
                     '488': 50.0,
                     '561': 50.0,
                     '638': 50.0}
+laser.strobing = 'OFF'   # 'ON' or 'OFF'
 
 # FILTER WHEEL PARAMETERS #TODO: this is likely static, move to json
 wheel.port = 'COM6'
