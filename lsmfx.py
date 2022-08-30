@@ -197,11 +197,15 @@ class laser(object):
     def __init__(self,
                  port=[],
                  rate=[],
-                 names_to_channels=[]):
+                 names_to_channels=[],
+                 max_powers=[],
+                 strobing=[]):
 
         self.port = port
         self.rate = rate
         self.names_to_channels = names_to_channels
+        self.max_powers = max_powers
+        self.strobing = strobing
 
 
 class etl(object):
@@ -532,11 +536,17 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     voltages[n2c['ygalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.yamplitude[list(experiment.wavelengths)[ch]]/math.pi)*numpy.arctan(1.0/(numpy.tan(period_samples/2.0)))+daq.yoffset[list(experiment.wavelengths)[ch]]
     voltages[n2c['ygalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
     voltages[n2c['ygalvo'], 0:roll_samples-galvo_samples-buffer_samples] = snap_back[samples-(roll_samples+on_samples-galvo_samples+buffer_samples):samples]
-    
+
     # Laser modulation:
-    voltages[n2c[list(experiment.wavelengths)[ch]], roll_samples+50:roll_samples+on_samples-50] = 5.0
-    voltages[n2c[list(experiment.wavelengths)[ch]],0] = 0.0
-    voltages[n2c[list(experiment.wavelengths)[ch]],-1] = 0.0
+    if laser.strobing == 'ON':
+        voltages[n2c[list(experiment.wavelengths)[ch]],
+                 roll_samples+50:roll_samples+on_samples-50] = 5.0
+        voltages[n2c[list(experiment.wavelengths)[ch]], 0] = 0.0
+        voltages[n2c[list(experiment.wavelengths)[ch]], -1] = 0.0
+    elif laser.strobing == 'OFF':
+        voltages[n2c[list(experiment.wavelengths)[ch]],:] = 5.0
+    else:
+        raise Exception('laser.strobing invalid, must be \'ON\' or \'OFF\'')
 
     # ETL scanning:
     voltages[n2c['etl'], :] = daq.eoffset[list(experiment.wavelengths)[ch]]
