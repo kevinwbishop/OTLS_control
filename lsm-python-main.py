@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
 import lsmfx
+import json
+
+'''
+I don't think we need these
 from lsmfx import experiment
 from lsmfx import camera
 from lsmfx import daq
@@ -8,135 +12,109 @@ from lsmfx import laser
 from lsmfx import wheel
 from lsmfx import etl
 from lsmfx import stage
+'''
 
+#  TODO: identify which settings change with each experiment
+#        parameters marked with ## do NOT change with each experiment
+#  TODO: create experiment json file, and dump everything static into it
+#  TODO: Make an actual instance of the objects in lsmfx.py
 
-# NEW VERSION
+'''
+Option 1: everything static is read into a dict, compute dynamic values at end of this file
+Option 2: pass dynamic values to a file which reads static values and then returns dict of all files
+    This seems roundabout
+Option 3: write a function in lsmfx to compute dynamic values. That function gets called at the end of this file
+'''
+
+# import dicts from static params
+# update dicts - could add updates to methods within the classes
+# pass dicts to class constructors
+# pass objects to scan3D
+
 
 um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
-#  TODO: identify which settings change with each experiment
-#  TODO: create experiment json file, and dump everything static into it
+# import static parameters
+with open('static_params.json', 'r') as read_file:
+    static_params = json.load(read_file)
+
+camera_dict = static_params['camera']
+experiment_dict = static_params['experiment']
+daq_dict = static_params['daq']
+laser_dict = static_params['laser']
+wheel_dict = static_params['wheel']
+etl_dict = static_params['etl']
+stage_dict = static_params['stage']
 
 # CAMERA PARAMETERS
-camera.number = 0 ##
-camera.sampling = um_per_px
-camera.expTime = 10.0  # ms
-camera.Y = 256 ##
-camera.X = 2048 ##
-camera.shutterMode = 'top middle bottom middle' ##
-camera.triggerMode = 'auto sequence' ##
-camera.acquireMode = 'external' ##
-camera.compressionMode = 1 ##
-camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
+camera_dict['sampling'] = um_per_px  # compute at end instead
+camera_dict['expTime'] = 10.0  # ms
+camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
+
+# FILE PARAMETERS
+experiment_dict['drive'] = 'K'
+experiment_dict['fname'] = 'power_testing'  # specimen names
 
 # ROI PARAMETERS
-experiment.drive = 'K'
-experiment.fname = 'power_testing'  # specimen names
-experiment.overlap = 30  # number of px overlap in Y and Z between tiles ##
-experiment.xMin = 0.0  # mm
-experiment.xMax = 0.1  # mm
-experiment.yMin = 0.0  # mm
-experiment.yMax = 0.5  # mm
-experiment.zMin = -1.0  # mm
-experiment.zMax = 0.0  # mm
-experiment.xWidth = um_per_px  # um
-experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
-experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) \
+experiment_dict['xMin'] = 0.0  # mm
+experiment_dict['xMax'] = 0.1  # mm
+experiment_dict['yMin'] = 0.0  # mm
+experiment_dict['yMax'] = 0.5  # mm
+experiment_dict['zMin'] = -1.0  # mm
+experiment_dict['zMax'] = 0.0  # mm
+
+# compute at end instead
+experiment_dict.xWidth = um_per_px  # um
+experiment_dict.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
+experiment_dict.zWidth = (camera.Y/1.4142 - experiment.overlap) \
     * um_per_px / 1000  # mm
 
-# set experiment wavelenths here
-experiment.wavelengths = {'638': 2.0}
+# set experiment wavelenths here, power in mW
+experiment_dict.wavelengths = {'405': 1.0,
+                               '488': 1.0,
+                               '561': 1.0,
+                               '638': 1.0}
 
 
-experiment.attenuations = {'405': 1.4,
-                           '488': 1.4,
-                           '561': 1.4,
-                           '638': 1.4}
-experiment.theta = 45.0  # light sheet angle ##
+experiment_dict.attenuations = {'405': 1.4,
+                                '488': 1.4,
+                                '561': 1.4,
+                                '638': 1.4}
 
-
-# VOLTAGE PARAMETERS
-daq.rate = 4e5  # Hz ##
-daq.board = 'Dev3' ##
-daq.num_channels = 32  # AO channels ##
-daq.names_to_channels = {'xgalvo': 0, ##
-                         'ygalvo': 1,
-                         'camera2_ex': 2,
-                         'camera2_aq': 3,
-                         'camera0_ex': 4,
-                         'camera0_aq': 5,
-                         'etl': 6,
-                         'daq_active': 7,  # adjusting behavior of this!
-                         '405': 8,
-                         '488': 9,
-                         '561': 11,
-                         '638': 12}
-
-
-# TODO: set immersion variable at beginning to read from json file
+# TODO: set immersion variable at begining to read from json file
 # cont: to automatically set variables
 # all daq amplitudes are in Volts
-daq.xamplitude = {'405': 0.1400,
-                  '488': 0.3000,
-                  '561': 0.1400,
-                  '638': 0.3000}
+daq_dict.xamplitude = {'405': 0.1400,  ##
+                       '488': 0.3000,
+                       '561': 0.1400,
+                       '638': 0.3000}
 
-daq.xoffset = {'405': -0.040,
-               '488': 1.1750,
-               '561': -0.040,
-               '638': 1.1750}
+daq_dict.xoffset = {'405': -0.040,  ##
+                    '488': 1.1750,
+                    '561': -0.040,
+                    '638': 1.1750}
 
-daq.yamplitude = {'405': 0.0017,
-                  '488': 0.0195,
-                  '561': 0.0200,
-                  '638': 0.0195}
+daq_dict.yamplitude = {'405': 0.0017,  ##
+                       '488': 0.0195,
+                       '561': 0.0200,
+                       '638': 0.0195}
 
-daq.yoffset = {'405': 0.1200,
-               '488': 0.0650,
-               '561': 0.0575,
-               '638': 0.0650}
+daq_dict.yoffset = {'405': 0.1200,
+                    '488': 0.0650,
+                    '561': 0.0575,
+                    '638': 0.0650}
 
-daq.eamplitude = {'405': 0.0000,
-                  '488': 0.0000,
-                  '561': 0.0000,
-                  '638': 0.0000}
+daq_dict.eamplitude = {'405': 0.0000,  ##
+                       '488': 0.0000,
+                       '561': 0.0000,
+                       '638': 0.0000}
 
-daq.eoffset = {'405': 2.6300,
-               '488': 2.5000,
-               '561': 2.5850,
-               '638': 2.5000}
+daq_dict.eoffset = {'405': 2.6300,
+                    '488': 2.5000,
+                    '561': 2.5850,
+                    '638': 2.5000}
 
-# LASER PARAMETERS
-laser.port = 'COM4'
-laser.rate = 9600
-laser.names_to_channels = {'405': 4,
-                           '488': 3,
-                           '561': 1,
-                           '638': 2}
-
-laser.max_powers = {'405': 50.0,
-                    '488': 50.0,
-                    '561': 50.0,
-                    '638': 50.0}
-laser.strobing = 'OFF'   # 'ON' or 'OFF'
-
-# FILTER WHEEL PARAMETERS #TODO: this is likely static, move to json
-wheel.port = 'COM6'
-wheel.rate = 115200
-wheel.names_to_channels = {'405': 1,
-                           '488': 2,
-                           '561': 3,
-                           '638': 4,
-                           '660': 5,
-                           'none': 6}
-
-# ETL PARAMETERS #TODO: again static move to json
-etl.port = 'COM5'
-
-# XYZ STAGE PARAMETERS #TODO: static move to json
-stage.port = 'COM3'
-stage.rate = 115200
+# myCamera = lsmfx(camera_dict)
 
 """ BEGIN SCANNING """
-
-lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
+#lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
