@@ -8,6 +8,10 @@ Cobolt Skyra control.
   with the specific laser as they are factory calibrated - KB 2022
 
 """
+
+# TODO Update skyra_LUT.py so that it properly generates a LUT, or add
+# instructions to generate such a table in MATLAB
+
 import hardware.RS232 as RS232
 import json
 from scipy import interpolate
