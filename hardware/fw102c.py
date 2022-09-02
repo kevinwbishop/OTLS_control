@@ -3,19 +3,21 @@
 Thorlabs FW102C control.
 
 Adam Glaser 07/19
+Edited by Gan Gao in 09/22: enforced linting and added doc strings.
 
 """
 import hardware.RS232 as RS232
 
+
 class FW102C(RS232.RS232):
     """
-    Encapsulates communication with a Thorlabs filter wheel that is connected via RS-232.
+    Encapsulates communication with a Thorlabs filter wheel that is connected 
+    via RS-232.
     """
     def __init__(self, **kwds):
         try:
             # open port
             super().__init__(**kwds)
-            
             # see if the filter wheel is connected
             assert not(self.getID() == None)
 
@@ -36,6 +38,12 @@ class FW102C(RS232.RS232):
         print(self.waitResponse())
 
     def setHighSpeedMode(self, on):
+        """
+        Set the filter switching speed
+
+        Parameters:
+        on (bool): high speed mode flag
+        """
         if on:
             self.sendCommand("speed=1")
         else:
@@ -45,11 +53,21 @@ class FW102C(RS232.RS232):
     def setPosition(self, position):
         """
         Set the filter position.
+
+        Parameters:
+        position (int): position at the filter wheel
         """
         self.sendCommand("pos=" + str(position))
         self.waitResponse()
 
     def setSensorMode(self, on):
+        """
+        Set sensor mode
+
+        Parameters:
+        on (bool): Sensors turn off (0) or active (1)
+        when wheel is idle to eliminate stray light
+        """
         if on:
             self.sendCommand("sensors=0")
         else:
