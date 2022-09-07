@@ -12,9 +12,7 @@ import h5py
 import os.path
 import skimage.transform
 import pco
-# import hardware.pco as pco
 import hardware.tiger as tiger
-# import hardware.ms2000 as ms2000
 import hardware.ni as ni
 import hardware.fw102c as fw102c
 import hardware.skyra as skyra
@@ -223,29 +221,25 @@ class stage(object):
 # scan tiles
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
-    # ROUND SCAN DIMENSIONS
-    #  TODO: create initialize scan function and dump all this in there
+    # ROUND SCAN DIMENSIONS & SETUP IMAGING SESSION
     session = scan(experiment, camera)
 
     # SETUP DATA DIRECTORY
-    # TODO: this should be a method within experiment
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
 
     #  CONNECT XYZ STAGE
-
     xyzStage, initialPos = stage.initialize()
     print(xyzStage)
 
     #  INITIALIZE H5 FILE
-
     h5init(dest, camera, session, experiment)
     write_xml(experiment=experiment, camera=camera, scan=session)
 
-    ############### CONNECT NIDAQ ###############
-
-    waveformGenerator = ni.waveformGenerator(daq=daq, camera=camera, triggered=True)
-    #  waveformGenerator.write_zeros(daq=daq)
+    # CONNECT NIDAQ
+    waveformGenerator = ni.waveformGenerator(daq=daq,
+                                             camera=camera,
+                                             triggered=True)
 
     #  CONNECT LASER
 
@@ -267,46 +261,45 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         skyraLaser.setModulationLowCurrent(laser.names_to_channels[ch], 0)
     print(skyraLaser)
 
-    ############ CONNECT FILTER WHEEL ###########
+    # CONNECT FILTER WHEEL
 
     fWheel = fw102c.FW102C(baudrate=wheel.rate, port=wheel.port)
     print(fWheel)
 
-    ############ CONNECT TUNBALE LENS ###########
+    # CONNECT TUNBALE LENS
 
     etl = Opto(port=etl.port)
     etl.connect()
     etl.mode('analog')
     print(etl)
 
-
-
-    #  CONNECT CAMERA
+    # CONNECT CAMERA
+    # TODO: setup separate hardware initialization method within camera
 
     cam = pco.Camera(camera_number=camera.number)
-    
+
     cam.configuration = {'exposure time': camera.expTime*1.0e-3,
-                 'roi': (1, 1023-round(camera.Y/2), 2060, 1026+round(camera.Y/2)),
-                 'trigger': camera.triggerMode,
-                 'acquire': camera.acquireMode,
-                 'pixel rate': 272250000}
-    #print('configured cam')
+                         'roi': (1,
+                                 1023-round(camera.Y/2),
+                                 2060,
+                                 1026+round(camera.Y/2)),
+                         'trigger': camera.triggerMode,
+                         'acquire': camera.acquireMode,
+                         'pixel rate': 272250000}
+
     cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
     # possibly change mode to ring buffer??
-    #print('made record') 
 
-    ######## IMAGING LOOP #########
+    # IMAGING LOOP
 
-    ring_buffer = np.zeros((session.blockSize, camera.Y, camera.X), dtype='uint16')
+    ring_buffer = np.zeros((session.blockSize,
+                           camera.Y,
+                           camera.X),
+                           dtype=np.uint16)
 
-    #print('made ring buffer')
+    # print('made ring buffer')
     tile = 0
-    previous_tile_time = 0
-    previous_ram = 0
-    
     start_time = timer.time()
-
-    #print('made timer')
 
     xPos = session.xLength/2.0 - session.xOff
 
@@ -316,16 +309,11 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         xyzStage.setVelocity('Z', 0.1)
         xyzStage.goAbsolute('Z', zPos, False)
 
-        #print('sent Z')
-
         for k in range(session.yTiles):
 
             yPos = session.yOff-session.yLength/2.0+k*experiment.yWidth+experiment.yWidth/2.0
             xyzStage.setVelocity('Y', 1.0)
             xyzStage.goAbsolute('Y', yPos, False)
-
-
-            #print('sent Y')
 
             for ch in range(session.nWavelengths):
                 # ch is order of wavelenghts in main
@@ -334,33 +322,32 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 xPos = session.xLength/2.0 - session.xOff
                 xyzStage.goAbsolute('X', -xPos, False)
 
-                ############# CHANGE FILTER ############
+                # CHANGE FILTER
 
                 fWheel.setPosition(wheel.names_to_channels[list(experiment.wavelengths)[ch]])
-                
-                #print('set filter')
 
-                ############## START SCAN ##############
+                # START SCAN
 
                 skyraLaser.setModulationHighCurrent(
-                    laser.names_to_channels[
-                                    list(
-                                        experiment.wavelengths
-                                        )[ch]], experiment.wavelengths[list(experiment.wavelengths)[ch]]/ \
-                                        np.exp(-j*experiment.zWidth/experiment.attenuations[list(experiment.wavelengths)[ch]])
-                                )
-                
-                #print('set laser')
+                    laser.names_to_channels[list(experiment.wavelengths)[ch]],
+                    experiment.wavelengths[list(experiment.wavelengths)[ch]] /
+                    np.exp(-j*experiment.zWidth /
+                           experiment.attenuations[list(experiment.wavelengths)
+                                                   [ch]])
+                    )
+
                 voltages, rep_time = write_voltages(daq=daq,
                                                     laser=laser,
                                                     camera=camera,
                                                     experiment=experiment,
                                                     scan=session,
                                                     ch=ch)
-                #print('writing voltages')
+
                 waveformGenerator.ao_task.write(voltages)
 
-                print('Starting tile ' + str((tile)*session.nWavelengths+ch+1) + '/' + str(sesion.nWavelengths*session.zTiles*session.yTiles))
+                print('Starting tile ' + str((tile)*session.nWavelengths+ch+1),
+                      '/',
+                      str(session.nWavelengths*session.zTiles*session.yTiles))
                 print('y position: ' + str(yPos) + ' mm')
                 print('z position: ' + str(zPos) + ' mm')
                 tile_start_time = timer.time()
@@ -381,26 +368,34 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 xyzStage.scan(False)
                 skyraLaser.turnOn(laser.names_to_channels[list(experiment.wavelengths)[ch]])
 
-                ########## START IMAGING LOOP ##########
+                # START IMAGING LOOP 
 
                 num_acquired = 0
                 num_acquired_counter = 0
                 num_acquired_previous = 0
 
-                # while num_acquired < scan.nFrames: #original version. for some reason code frequently (but not always)
-                # gets stuck on cam.wait_for_next_image(num_acquired), like cam is a frame or two ahead of code
+                # while num_acquired < scan.nFrames: #original version.
+                # for some reason code frequently (but not always)
+                # gets stuck on cam.wait_for_next_image(num_acquired),
+                # like cam is a frame or two ahead of code
                 while num_acquired < session.nFrames - 100:
 
                     cam.wait_for_next_image(num_acquired)
 
                     if num_acquired_counter == int(session.blockSize):
-                        print('Saving frames: ' + str(num_acquired_previous) + ' - ' + str(num_acquired))
+                        print('Saving frames: ',
+                              str(num_acquired_previous),
+                              ' - ',
+                              str(num_acquired))
                         print('Tile: ' + str(tile))
-                        h5write(dest, ring_buffer, tile + session.zTiles*session.yTiles*ch, num_acquired_previous, num_acquired)
+                        h5write(dest,
+                                ring_buffer,
+                                tile + session.zTiles*session.yTiles*ch,
+                                num_acquired_previous, num_acquired)
                         num_acquired_counter = 0
                         num_acquired_previous = num_acquired
                         temp = cam.image(num_acquired)[0]
-                        
+                
                         ring_buffer[num_acquired_counter] = temp[2:camera.Y+2,
                                                                  1024-int(camera.X/2):1024
                                                                  - int(camera.X/2)+camera.X]
@@ -413,8 +408,16 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                                                  1024-int(camera.X/2):1024 -int(camera.X/2)+camera.X]
 
                     if num_acquired == session.nFrames-1:
-                        print('Saving frames: ' + str(num_acquired_previous) + ' - ' + str(session.nFrames))
-                        h5write(dest, ring_buffer[0:num_acquired_counter+1], tile + session.zTiles*session.yTiles*ch, num_acquired_previous, session.nFrames)
+                        print('Saving frames: ',
+                              str(num_acquired_previous),
+                              ' - ',
+                              str(session.nFrames))
+
+                        h5write(dest,
+                                ring_buffer[0:num_acquired_counter+1],
+                                tile + session.zTiles*session.yTiles*ch,
+                                num_acquired_previous,
+                                session.nFrames)
 
                     num_acquired += 1
                     num_acquired_counter += 1
@@ -422,7 +425,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 waveformGenerator.ao_task.stop()
                 waveformGenerator.write_zeros(daq=daq)
                 # For some reason this write_zeros works but the above doesn't?
-                # laser stops and starts appropriately with this one active and the top write_zeros() commented out
+                # laser stops and starts appropriately with this one active 
+                # and the top write_zeros() commented out
 
                 skyraLaser.turnOff(list(experiment.wavelengths)[ch])
                 cam.stop()
@@ -430,7 +434,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 tile_end_time = timer.time()
                 tile_time = tile_end_time - tile_start_time
                 print('Tile time: ' + str(round((tile_time/60), 3)) + " min")
-                tiles_remaining = session.nWavelengths*session.zTiles*session.yTiles - (tile*session.nWavelengths+ch+1) 
+                tiles_remaining = session.nWavelengths*session.zTiles*session.yTiles - (tile*session.nWavelengths+ch+1)
 
                 if tiles_remaining != 0:
                     print('Estimated time remaining: ',
