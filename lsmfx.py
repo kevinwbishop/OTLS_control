@@ -4,6 +4,7 @@ LSM scanning code
 
 # Adam Glaser 07/19
 # Edited by Kevin Bishop 5/22
+# Edited by Rob Serafin 9/22
 
 """
 import numpy as np
@@ -180,6 +181,24 @@ class laser(object):
         self.max_powers = max_powers
         self.strobing = strobing
 
+    def initialize(self, experiment):
+
+        skyraLaser = skyra.Skyra(baudrate=self.rate, port=self.port)
+        for ch in list(self.names_to_channels):
+            skyraLaser.setModulationOn(self.names_to_channels[ch])
+            skyraLaser.setDigitalModulation(self.names_to_channels[ch], 1)
+
+            #  new, to ensure analog mod is not active
+            skyraLaser.setAnalogModulation(self.names_to_channels[ch], 0)
+        for ch in list(experiment.wavelengths):
+            skyraLaser.setModulationHighCurrent(self.names_to_channels[ch],
+                                                experiment.wavelengths[ch])
+            skyraLaser.turnOn(self.names_to_channels[ch])
+        for ch in list(experiment.wavelengths):
+            skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0)
+
+        return skyraLaser
+
 
 class etl(object):
     def __init__(self, port=[]):
@@ -246,19 +265,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # according to the manual, you should wait for 2min after setting
     # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
     # TODO: disentangle laser and experiment attributes
-    skyraLaser = skyra.Skyra(baudrate=laser.rate, port=laser.port)
-    for ch in list(laser.names_to_channels):
-        skyraLaser.setModulationOn(laser.names_to_channels[ch])
-        skyraLaser.setDigitalModulation(laser.names_to_channels[ch], 1)
-
-        #  new, to ensure analog mod is not active
-        skyraLaser.setAnalogModulation(laser.names_to_channels[ch], 0)
-    for ch in list(experiment.wavelengths):
-        skyraLaser.setModulationHighCurrent(laser.names_to_channels[ch],
-                                            experiment.wavelengths[ch])
-        skyraLaser.turnOn(laser.names_to_channels[ch])
-    for ch in list(experiment.wavelengths):
-        skyraLaser.setModulationLowCurrent(laser.names_to_channels[ch], 0)
+    skyraLaser = laser.initalize(experiment)
     print(skyraLaser)
 
     # CONNECT FILTER WHEEL
@@ -368,7 +375,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 xyzStage.scan(False)
                 skyraLaser.turnOn(laser.names_to_channels[list(experiment.wavelengths)[ch]])
 
-                # START IMAGING LOOP 
+                # START IMAGING LOOP
 
                 num_acquired = 0
                 num_acquired_counter = 0
@@ -395,7 +402,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                         num_acquired_counter = 0
                         num_acquired_previous = num_acquired
                         temp = cam.image(num_acquired)[0]
-                
+
                         ring_buffer[num_acquired_counter] = temp[2:camera.Y+2,
                                                                  1024-int(camera.X/2):1024
                                                                  - int(camera.X/2)+camera.X]
@@ -464,26 +471,26 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
 
     n2c = daq.names_to_channels
 
-    samples = int(daq.rate*camera.expTime/1e3) # number of samples for DAQ
-    
-    line_time = 9.76/1.0e6 # seconds, constant for pco.edge camera
-    roll_time = line_time*camera.Y/2.0 # chip rolling time in seconds
-    roll_samples = int(np.floor(roll_time*daq.rate)) # rolling samples
+    samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
 
-    on_time = camera.expTime/1e3 - roll_time # ON time for strobing laser
-    on_samples = int(np.floor(on_time*daq.rate)) # ON samples
+    line_time = 9.76/1.0e6  # seconds, constant for pco.edge camera
+    roll_time = line_time*camera.Y/2.0  # chip rolling time in seconds
+    roll_samples = int(np.floor(roll_time*daq.rate))  # rolling samples
 
-    galvo_time = 365/1.0e6 # galvo delay time
+    on_time = camera.expTime/1e3 - roll_time  # ON time for strobing laser
+    on_samples = int(np.floor(on_time*daq.rate))  # ON samples
+
+    galvo_time = 365/1.0e6  # galvo delay time
     galvo_samples = int(np.floor(galvo_time*daq.rate))
 
     buffer_time = 50/1.0e6
     buffer_samples = int(np.floor(buffer_time*daq.rate))
 
-    voltages = np.zeros((daq.num_channels, samples)) # create voltages array
+    voltages = np.zeros((daq.num_channels, samples))  # create voltages array
 
     # X Galvo scanning:
     period_samples = np.linspace(0, 2*math.pi, on_samples+2*buffer_samples)
-    snap_back = np.linspace(daq.xoffset[list(experiment.wavelengths)[ch]]+daq.xamplitude[list(experiment.wavelengths)[ch]], daq.xoffset[list(experiment.wavelengths)[ch]]-daq.xamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
+    snap_back = np.linspace(daq.xoffset[list(experiment.wavelengths)[ch]] + daq.xamplitude[list(experiment.wavelengths)[ch]], daq.xoffset[list(experiment.wavelengths)[ch]]-daq.xamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
     voltages[n2c['xgalvo'],:] = daq.xoffset[list(experiment.wavelengths)[ch]]
     voltages[n2c['xgalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.xamplitude[list(experiment.wavelengths)[ch]]/math.pi)*np.arctan(1.0/(np.tan(period_samples/2.0)))+daq.xoffset[list(experiment.wavelengths)[ch]]
     voltages[n2c['xgalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
@@ -523,36 +530,37 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     # Check final voltages for sanity
     # Assert that voltages are safe
     assert (1.0/(1.0/on_time)) <= 800.0
-    assert np.max(voltages[n2c['xgalvo'],:]) <= 5.0
-    assert np.min(voltages[n2c['xgalvo'],:]) >= -5.0
-    assert np.max(voltages[n2c['ygalvo'],:]) <= 5.0
-    assert np.min(voltages[n2c['ygalvo'],:]) >= -5.0
-    assert np.max(voltages[n2c['etl'],:]) <= 5.0
-    assert np.min(voltages[n2c['etl'],:]) >= 0.0
-    assert np.max(voltages[n2c['daq_active'],:]) <= 5.0
-    assert np.min(voltages[n2c['daq_active'],:]) >= 0.0
-    assert np.max(voltages[n2c[list(experiment.wavelengths)[ch]],:]) <= 5.0
-    assert np.min(voltages[n2c[list(experiment.wavelengths)[ch]],:]) >= 0.0
+    assert np.max(voltages[n2c['xgalvo'], :]) <= 5.0
+    assert np.min(voltages[n2c['xgalvo'], :]) >= -5.0
+    assert np.max(voltages[n2c['ygalvo'], :]) <= 5.0
+    assert np.min(voltages[n2c['ygalvo'], :]) >= -5.0
+    assert np.max(voltages[n2c['etl'], :]) <= 5.0
+    assert np.min(voltages[n2c['etl'], :]) >= 0.0
+    assert np.max(voltages[n2c['daq_active'], :]) <= 5.0
+    assert np.min(voltages[n2c['daq_active'], :]) >= 0.0
+    assert np.max(voltages[n2c[list(experiment.wavelengths)[ch]], :]) <= 5.0
+    assert np.min(voltages[n2c[list(experiment.wavelengths)[ch]], :]) >= 0.0
 
     return voltages, (camera.expTime/1e3-2*roll_time)*1000
 
+
 def zero_voltages(daq, camera):
-    samples = int(daq.rate*camera.expTime/1e3) # number of samples for DAQ
-    voltages = np.zeros((daq.num_channels, 2)) # create voltages array
+    samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
+    voltages = np.zeros((daq.num_channels, 2))  # create voltages array
     return voltages
 
 
 def h5init(dest, camera, scan, experiment):
 
-    f = h5py.File(dest,'a')
+    f = h5py.File(dest, 'a')
 
-    res_list = [1,2,4,8]
+    res_list = [1, 2, 4, 8]
 
     res_np = np.zeros((len(res_list), 3), dtype='float64')
 
-    res_np[:,0] = res_list
-    res_np[:,1] = res_list
-    res_np[:,2] = res_list
+    res_np[:, 0] = res_list
+    res_np[:, 1] = res_list
+    res_np[:, 2] = res_list
 
     subdiv_np = np.zeros((len(res_list), 3), dtype='uint32')
 
@@ -573,16 +581,16 @@ def h5init(dest, camera, scan, experiment):
                 idx = tile + scan.zTiles*scan.yTiles*ch
 
                 sgroup = f.create_group('/s' + str(idx).zfill(2))
-                resolutions = f.require_dataset('/s' + str(idx).zfill(2) + '/resolutions', 
-                                                chunks=(res_np.shape), 
-                                                dtype='float64', 
-                                                shape=(res_np.shape), 
+                resolutions = f.require_dataset('/s' + str(idx).zfill(2) + '/resolutions',
+                                                chunks=(res_np.shape),
+                                                dtype='float64',
+                                                shape=(res_np.shape),
                                                 data=res_np)
 
-                subdivisions = f.require_dataset('/s' + str(idx).zfill(2) + '/subdivisions', 
-                                                 chunks=(res_np.shape), 
-                                                 dtype='uint32', 
-                                                 shape=(subdiv_np.shape), 
+                subdivisions = f.require_dataset('/s' + str(idx).zfill(2) + '/subdivisions',
+                                                 chunks=(res_np.shape),
+                                                 dtype='uint32',
+                                                 shape=(subdiv_np.shape),
                                                  data=subdiv_np)
 
                 for z in range(len(res_list)-1, -1, -1):
@@ -591,49 +599,54 @@ def h5init(dest, camera, scan, experiment):
 
                     resgroup = f.create_group('/t00000/s' + str(idx).zfill(2) + '/' + str(z))
 
-                    if camera.quantSigma[list(experiment.wavelengths)[ch]]  == 0:
+                    if camera.quantSigma[list(experiment.wavelengths)[ch]] == 0:
 
                         data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells', 
-                                                 chunks=(scan.chunkSize1, 
-                                                            scan.chunkSize2, 
-                                                            scan.chunkSize3), 
-                                                 dtype='int16', 
-                                                 shape=np.ceil(np.divide([scan.nFrames, 
-                                                                                   camera.Y, 
-                                                                                   camera.X],
-                                                                                   res)))	
-                    else:	
-                        data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells', 
-                                                 chunks=(scan.chunkSize1, 
-                                                            scan.chunkSize2, 
-                                                            scan.chunkSize3), 
-                                                 dtype='int16', 
-                                                 shape=np.ceil(np.divide([scan.nFrames, 
-                                                                                   camera.Y, 
-                                                                                   camera.X],
-                                                                                   res)), 
-                                                 compression=32016, 
-                                                 compression_opts=(round(camera.quantSigma[list(experiment.wavelengths)[ch]]*1000), 
-                                                                      camera.compressionMode, 
-                                                                      round(2.1845*1000), 
-                                                                      0, 
-                                                                      round(1.5*1000))
-                                                 )	
+                                                 chunks=(scan.chunkSize1,
+                                                         scan.chunkSize2,
+                                                         scan.chunkSize3),
+                                                 dtype='int16',
+                                                 shape=np.ceil(np.divide([scan.nFrames,
+                                                                          camera.Y,
+                                                                          camera.X],
+                                                                          res)
+                                                                          )
+                                                                          )
+                    else:
+                        data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells',
+                                chunks=(scan.chunkSize1,
+                                        scan.chunkSize2,
+                                        scan.chunkSize3),
+                                dtype='int16',
+                                shape=np.ceil(np.divide([scan.nFrames,
+                                                        camera.Y,
+                                                        camera.X],
+                                                        res)),
+                                compression=32016,
+                                compression_opts=(round(camera.quantSigma[list(experiment.wavelengths)[ch]]*1000),
+                                                    camera.compressionMode,
+                                                    round(2.1845*1000),
+                                                    0, 
+                                                    round(1.5*1000))
+                                                 )
 
             tile += 1
 
     f.close()
 
+
 def h5write(dest, img_3d, idx, ind1, ind2):
 
-    f = h5py.File(dest,'a')
+    f = h5py.File(dest, 'a')
 
-    res_list = [1,2,4,8]
+    res_list = [1, 2, 4, 8]
 
     for z in range(len(res_list)):
         res = res_list[z]
         if res > 1:
-            img_3d = skimage.transform.downscale_local_mean(img_3d, (2, 2, 2)).astype('uint16')
+            img_3d = skimage.transform.downscale_local_mean(img_3d, 
+                                                            (2, 2, 2)
+                                                            ).astype('uint16')
 
         if ind1 == 0:
             ind1_r = ind1
@@ -642,30 +655,36 @@ def h5write(dest, img_3d, idx, ind1, ind2):
 
         data = f['/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells']	
         data[int(ind1_r):int(ind1_r+img_3d.shape[0])] = img_3d.astype('int16')
-    
+
     f.close()
 
+
 def write_xml(experiment, camera, scan):
-    
+
     print("Writing BigDataViewer XML file...")
 
-    c = scan.nWavelengths # number of channels
-    tx = scan.yTiles # number of lateral x tiles
-    ty = scan.zTiles # number of vertical y tiles
-    t = tx*ty # total tiles
+    c = scan.nWavelengths  # number of channels
+    tx = scan.yTiles  # number of lateral x tiles
+    ty = scan.zTiles  # number of vertical y tiles
+    t = tx*ty  # total tiles
 
-    ox = experiment.yWidth*1000 # offset along x in um
-    oy = experiment.zWidth*1000 # offset along y in um
+    ox = experiment.yWidth*1000  # offset along x in um
+    oy = experiment.zWidth*1000  # offset along y in um
 
-    sx = camera.sampling # effective pixel size in x direction
-    sy = camera.sampling*np.cos(experiment.theta*np.pi/180.0) # effective pixel size in y direction
-    sz = experiment.xWidth # effective pixel size in z direction (scan direction)
+    sx = camera.sampling  # effective pixel size in x direction
 
-    scale_x = sx/sy # normalized scaling in x
-    scale_y = sy/sy # normalized scaling in y
-    scale_z = sz/sy # normalized scaning in z
+    # effective pixel size in y direction
+    sy = camera.sampling*np.cos(experiment.theta*np.pi/180.0)
 
-    shear=-np.tan(experiment.theta*np.pi/180.0)*sy/sz # shearing based on theta and y/z pixel sizes
+    # effective pixel size in z direction (scan direction)
+    sz = experiment.xWidth
+
+    scale_x = sx/sy  # normalized scaling in x
+    scale_y = sy/sy  # normalized scaling in y
+    scale_z = sz/sy  # normalized scaning in z
+
+    # shearing based on theta and y/z pixel sizes
+    shear = -np.tan(experiment.theta*np.pi/180.0)*sy/sz
 
     f = open(experiment.drive + ':\\' + experiment.fname + '\\data.xml', 'w')
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -677,17 +696,19 @@ def write_xml(experiment, camera, scan):
     f.write('\t\t</ImageLoader>\n')
     f.write('\t\t<ViewSetups>\n')
 
-    for i in range (0, c):
+    for i in range(0, c):
         for j in range(0, t):
             ind = j+i*t
             if ind <= scan.yTiles*scan.zTiles*scan.nWavelengths:
                 f.write('\t\t\t<ViewSetup>\n')
                 f.write('\t\t\t\t<id>' + str(t*i+j) + '</id>\n')
                 f.write('\t\t\t\t<name>' + str(t*i+j) + '</name>\n')
-                f.write('\t\t\t\t<size>' + str(camera.X) + ' ' + str(camera.Y) + ' ' + str(scan.nFrames) + '</size>\n')
+                f.write('\t\t\t\t<size>' + str(camera.X) + ' ' + str(camera.Y)
+                        + ' ' + str(scan.nFrames) + '</size>\n')
                 f.write('\t\t\t\t<voxelSize>\n')
                 f.write('\t\t\t\t\t<unit>um</unit>\n')
-                f.write('\t\t\t\t\t<size>' + str(sx) + ' ' + str(sy) + ' ' + str(sz) + '</size>\n')
+                f.write('\t\t\t\t\t<size>' + str(sx) + ' ' + str(sy) + ' '
+                        + str(sz) + '</size>\n')
                 f.write('\t\t\t\t</voxelSize>\n')
                 f.write('\t\t\t\t<attributes>\n')
                 f.write('\t\t\t\t\t<illumination>0</illumination>\n')
@@ -748,27 +769,38 @@ def write_xml(experiment, camera, scan):
 
                 if ind <= scan.yTiles*scan.zTiles*scan.nWavelengths:
 
-                    shiftx = scale_x*(ox/sx)*k # shift tile in x, unit pixels
-                    shifty=-scale_y*(oy/sy)*j # shift tile in y, unit pixels
+                    shiftx = scale_x*(ox/sx)*k  # shift tile in x, unit pixels
+                    shifty = -scale_y*(oy/sy)*j  # shift tile in y, unit pixels
 
-                    f.write('\t\t<ViewRegistration timepoint="0" setup="' + str(ind) + '">\n')
+                    f.write('\t\t<ViewRegistration timepoint="0" setup="'
+                            + str(ind) + '">\n')
 
-                    # affine matrix for translation of tiles into correct positions
+                    # affine matrix for translation of
+                    # tiles into correct positions
                     f.write('\t\t\t<ViewTransform type="affine">\n')
                     f.write('\t\t\t\t<Name>Overlap</Name>\n')
-                    f.write('\t\t\t\t<affine>1.0 0.0 0.0 ' + str(shiftx) + ' 0.0 1.0 0.0 ' + str(shifty) + ' 0.0 0.0 1.0 0.0</affine>\n')
+                    f.write('\t\t\t\t<affine>1.0 0.0 0.0 ' + str(shiftx)
+                            + ' 0.0 1.0 0.0 ' + str(shifty)
+                            + ' 0.0 0.0 1.0 0.0</affine>\n')
                     f.write('\t\t\t</ViewTransform>\n')
 
-                    # affine matrix for scaling of tiles in orthogonal XYZ directions, accounting for theta and inter-frame spacing
+                    # affine matrix for scaling of tiles in orthogonal
+                    # XYZ directions, accounting for theta and
+                    # inter-frame spacing
                     f.write('\t\t\t<ViewTransform type="affine">\n')
                     f.write('\t\t\t\t<Name>Scale</Name>\n')
-                    f.write('\t\t\t\t<affine>' + str(scale_x) + ' 0.0 0.0 0.0 0.0 ' + str(scale_y) + ' 0.0 0.0 0.0 0.0 ' + str(scale_z) + ' 0.0</affine>\n')
+                    f.write('\t\t\t\t<affine>' + str(scale_x)
+                            + ' 0.0 0.0 0.0 0.0 ' + str(scale_y)
+                            + ' 0.0 0.0 0.0 0.0 ' + str(scale_z)
+                            + ' 0.0</affine>\n')
                     f.write('\t\t\t</ViewTransform>\n')
 
                     # affine matrix for shearing of data within each tile
                     f.write('\t\t\t<ViewTransform type="affine">\n')
                     f.write('\t\t\t\t<Name>Deskew</Name>\n')
-                    f.write('\t\t\t\t<affine>1.0 0.0 0.0 0.0 0.0 1.0 ' + str(0.0) + ' 0.0 0.0 ' + str(shear) + ' 1.0 0.0</affine>\n')
+                    f.write('\t\t\t\t<affine>1.0 0.0 0.0 0.0 0.0 1.0 '
+                            + str(0.0) + ' 0.0 0.0 ' + str(shear)
+                            + ' 1.0 0.0</affine>\n')
                     f.write('\t\t\t</ViewTransform>\n')
 
                     f.write('\t\t</ViewRegistration>\n')
