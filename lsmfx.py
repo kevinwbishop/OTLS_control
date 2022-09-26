@@ -325,6 +325,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
             for ch in range(session.nWavelengths):
                 # ch is order of wavelenghts in main
                 # why do velocity settings happen twice?
+                # ch is order of wavelenghts in main (NOT necessarily Skyra channel number)
                 xyzStage.setVelocity('X', 1.0)
                 xPos = session.xLength/2.0 - session.xOff
                 xyzStage.goAbsolute('X', -xPos, False)
