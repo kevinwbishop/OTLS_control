@@ -14,23 +14,12 @@ from lsmfx import etl
 from lsmfx import stage
 '''
 
-#  TODO: identify which settings change with each experiment
-#        parameters marked with ## do NOT change with each experiment
-#  TODO: create experiment json file, and dump everything static into it
-#  TODO: Make an actual instance of the objects in lsmfx.py
-
-'''
-Option 1: everything static is read into a dict, compute dynamic values at end of this file
-Option 2: pass dynamic values to a file which reads static values and then returns dict of all files
-    This seems roundabout
-Option 3: write a function in lsmfx to compute dynamic values. That function gets called at the end of this file
-'''
-
+# Code stucture:
 # import dicts from static params
-# update dicts - could add updates to methods within the classes
+# set user-defined paramters
+# compute any remaining paramters
 # pass dicts to class constructors
 # pass objects to scan3D
-
 
 um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
@@ -46,8 +35,9 @@ wheel_dict = static_params['wheel']
 etl_dict = static_params['etl']
 stage_dict = static_params['stage']
 
+# Set user-defined paramters
+
 # CAMERA PARAMETERS
-camera_dict['sampling'] = um_per_px  # compute at end instead
 camera_dict['expTime'] = 10.0  # ms
 camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
@@ -63,58 +53,68 @@ experiment_dict['yMax'] = 0.5  # mm
 experiment_dict['zMin'] = -1.0  # mm
 experiment_dict['zMax'] = 0.0  # mm
 
-# compute at end instead
-experiment_dict.xWidth = um_per_px  # um
-experiment_dict.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000  # mm
-experiment_dict.zWidth = (camera.Y/1.4142 - experiment.overlap) \
-    * um_per_px / 1000  # mm
-
 # set experiment wavelenths here, power in mW
-experiment_dict.wavelengths = {'405': 1.0,
-                               '488': 1.0,
-                               '561': 1.0,
-                               '638': 1.0}
+experiment_dict['wavelengths'] = {'405': 1.0,
+                                  '488': 1.0,
+                                  '561': 1.0,
+                                  '638': 1.0}
 
 
-experiment_dict.attenuations = {'405': 1.4,
-                                '488': 1.4,
-                                '561': 1.4,
-                                '638': 1.4}
+experiment_dict['attenuations'] = {'405': 1.4,
+                                   '488': 1.4,
+                                   '561': 1.4,
+                                   '638': 1.4}
 
-# TODO: set immersion variable at begining to read from json file
-# cont: to automatically set variables
+
 # all daq amplitudes are in Volts
-daq_dict.xamplitude = {'405': 0.1400,  ##
-                       '488': 0.3000,
-                       '561': 0.1400,
-                       '638': 0.3000}
+daq_dict['xamplitude'] = {'405': 0.1400,
+                          '488': 0.3000,
+                          '561': 0.1400,
+                          '638': 0.3000}
 
-daq_dict.xoffset = {'405': -0.040,  ##
-                    '488': 1.1750,
-                    '561': -0.040,
-                    '638': 1.1750}
+daq_dict['xoffset'] = {'405': -0.040,
+                       '488': 1.1750,
+                       '561': -0.040,
+                       '638': 1.1750}
 
-daq_dict.yamplitude = {'405': 0.0017,  ##
-                       '488': 0.0195,
-                       '561': 0.0200,
-                       '638': 0.0195}
+daq_dict['yamplitude'] = {'405': 0.0017,
+                          '488': 0.0195,
+                          '561': 0.0200,
+                          '638': 0.0195}
 
-daq_dict.yoffset = {'405': 0.1200,
-                    '488': 0.0650,
-                    '561': 0.0575,
-                    '638': 0.0650}
+daq_dict['yoffset'] = {'405': 0.1200,
+                       '488': 0.0650,
+                       '561': 0.0575,
+                       '638': 0.0650}
 
-daq_dict.eamplitude = {'405': 0.0000,  ##
-                       '488': 0.0000,
-                       '561': 0.0000,
-                       '638': 0.0000}
+daq_dict['eamplitude'] = {'405': 0.0000,
+                          '488': 0.0000,
+                          '561': 0.0000,
+                          '638': 0.0000}
 
-daq_dict.eoffset = {'405': 2.6300,
-                    '488': 2.5000,
-                    '561': 2.5850,
-                    '638': 2.5000}
+daq_dict['eoffset'] = {'405': 2.6300,
+                       '488': 2.5000,
+                       '561': 2.5850,
+                       '638': 2.5000}
 
-# myCamera = lsmfx(camera_dict)
+# compute remaining parameters
+camera_dict['sampling'] = um_per_px
+
+experiment_dict['xWidth'] = um_per_px  # um
+experiment_dict.yWidth = (camera_dict['X'] - experiment_dict['overlap']) \
+                        * um_per_px / 1000  # mm
+experiment_dict.zWidth = (camera_dict['Y'] / 1.4142 -
+                          experiment_dict['overlap']) * um_per_px / 1000  # mm
+
+# construct objects
+cameraObj = lsmfx(camera_dict)
+experimentObj = lsmfx(experiment_dict)
+daqObj = lsmfx(daq_dict)
+laserObj = lsmfx(laser_dict)
+wheelObj = lsmfx(wheel_dict)
+etlObj = lsmfx(etl_dict)
+stageObj = lsmfx(stage_dict)
 
 """ BEGIN SCANNING """
-#lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
+# lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj, 
+#              stageObj)
