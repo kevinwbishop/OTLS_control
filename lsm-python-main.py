@@ -116,5 +116,5 @@ etlObj = lsmfx(etl_dict)
 stageObj = lsmfx(stage_dict)
 
 """ BEGIN SCANNING """
-# lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj, 
+# lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
 #              stageObj)
