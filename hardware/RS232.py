@@ -3,11 +3,12 @@
 Wraps the pySerial library for RS232 communication.
 Hazen 3/09
 Adam Glaser 07/19
-
+Gan Gao 09/22: enforced linting and added doc strings.
 """
 
 import serial
 import time
+
 
 class RS232(object):
     """
@@ -15,28 +16,26 @@ class RS232(object):
     that communicate with their associated hardware using RS-232.
     """
 
-    def __init__(self,
-                 baudrate = None,
-                 encoding = 'utf-8',
-                 end_of_line = "\r",
-                 port = None,
-                 timeout = 1.0e-3,
-                 wait_time = 1.0e-2,
-                 **kwds):
+    def __init__(self, baudrate=None, encoding='utf-8', end_of_line="\r",
+                 port=None, timeout=1.0e-3, wait_time=1.0e-2, **kwds):
         """
-        port - The port for RS-232 communication, e.g. "COM4".
-        timeout - The RS-232 time out value.
-        baudrate - The RS-232 communication speed, e.g. 9800.
-        end_of_line - What character(s) are used to indicate the end of a line.
-        wait_time - How long to wait between polling events before it is decided 
-                    that there is no new data available on the port. 
+        Configure the serial connections.
+
+        Parameters:
+        baudrate: The RS-232 communication speed, e.g. 9800.
+        encoding: The way data encoded.
+        end_of_line: What character(s) are used to indicate the end of a line.
+        port: The port for RS-232 communication, e.g. "COM4".
+        timeout: The RS-232 time out value.
+        wait_time: How long to wait between polling events before it is
+        decided that there is no new data available on the port.
         """
         super().__init__(**kwds)
         self.encoding = encoding
         self.end_of_line = end_of_line
         self.wait_time = wait_time
         try:
-            self.tty = serial.Serial(port, baudrate, timeout = timeout)
+            self.tty = serial.Serial(port, baudrate, timeout=timeout)
             self.tty.flush()
             time.sleep(self.wait_time)
         except serial.serialutil.SerialException as e:
@@ -72,14 +71,26 @@ class RS232(object):
             return response
 
     def read(self, response_len):
+        """
+        Read bytes of a certain length set by response_len.
+
+        Parameters:
+        response_len: length of input in byte.
+        """
         response = self.tty.read(response_len)
         return response.decode(self.encoding)
 
     def readline(self):
+        """
+        Read characters until an EOL is received.
+        """
         response = self.tty.readline()
         return response.decode(self.encoding).strip()
         
     def sendCommand(self, command):
+        """
+        Send command to RS232 port.
+        """
         self.tty.flush()
         self.write(command + self.end_of_line)
 
@@ -89,13 +100,18 @@ class RS232(object):
         """
         self.tty.close()
 
-    def waitResponse(self, end_of_response = False, max_attempts = 200):
+    def waitResponse(self, end_of_response=False, max_attempts=200):
         """
         Waits much longer for a response. This is the method to use if
         you are sure that the hardware will respond eventually. If you
         don't set end_of_response then it will automatically be the
         end_of_line character, and this will return once it finds the
         first end_of_line character.
+
+        Parameters:
+        end_of_response: character(s) are used to indicate
+        the end of the response.
+        max_attempts: max number of attempts to get a response.
         """
         if not end_of_response:
             end_of_response = str(self.end_of_line)
@@ -112,9 +128,18 @@ class RS232(object):
         return response
 
     def write(self, string):
+        """
+        Write characters.
+
+        Parameters:
+        string: characters to write to RS232 port.
+        """
         self.tty.write(string.encode(self.encoding))
 
     def writeline(self, string):
+        """
+        Write characters ended with an EOL.
+        """
         msg = string + self.end_of_line
         self.tty.write(msg.encode(self.encoding))
 
@@ -141,4 +166,3 @@ class RS232(object):
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
