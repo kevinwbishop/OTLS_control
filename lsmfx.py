@@ -24,6 +24,7 @@ import time as timer
 # cont: key entries for each variable, this will clean up code quite a bit
 
 
+# NOT DONE
 class experiment(object):
     """
     A descriptive sentence
@@ -94,6 +95,7 @@ class experiment(object):
         self.overlap = overlap
 
 
+# NOT DONE
 class scan(object):
     def __init__(self, experiment, camera):
 
@@ -133,6 +135,7 @@ class scan(object):
         return speed
 
 
+# DONE
 class camera(object):
     def __init__(self,
                  camera_dict):
@@ -148,6 +151,7 @@ class camera(object):
         self.quantSigma = camera_dict['quantSigma']
 
 
+# DONE
 class daq(object):
     def __init__(self,
                  daq_dict):
@@ -165,20 +169,16 @@ class daq(object):
         self.eoffset = daq_dict['eoffset']
 
 
-
+# DONE
 class laser(object):
     def __init__(self,
-                 port=[],
-                 rate=[],
-                 names_to_channels=[],
-                 max_powers=[],
-                 strobing=[]):
+                laser_dict):
 
-        self.port = port
-        self.rate = rate
-        self.names_to_channels = names_to_channels
-        self.max_powers = max_powers
-        self.strobing = strobing
+        self.port = laser_dict['port']
+        self.rate = laser_dict['rate']
+        self.names_to_channels = laser_dict['names_to_channels']
+        self.max_powers = laser_dict['max_powers']
+        self.strobing = laser_dict['strobing']
 
     def initialize(self, experiment):
 
@@ -199,22 +199,28 @@ class laser(object):
         return skyraLaser
 
 
+# DONE
 class etl(object):
-    def __init__(self, port=[]):
-        self.port = port
+    def __init__(self,
+                 etl_dict):
+        self.port = etl_dict['port']
 
 
+# DONE
 class wheel(object):
-    def __init__(self, port=[], rate=[], names_to_channels=[]):
-        self.port = port
-        self.rate = rate
-        self.names_to_channels = names_to_channels
+    def __init__(self,
+                 wheel_dict):
+        self.port = wheel_dict['port']
+        self.rate = wheel_dict['rate']
+        self.names_to_channels = wheel_dict['names_to_channels']
 
 
+# DONE
 class stage(object):
-    def __init__(self, port=[], rate=[]):
-        self.port = port
-        self.rate = rate
+    def __init__(self,
+                 stage_dict):
+        self.port = stage_dict['port']
+        self.rate = stage_dict['rate']
         self.settings = {'backlash': 0,
                          'velocity': 1.0,
                          'acceleration': 100
