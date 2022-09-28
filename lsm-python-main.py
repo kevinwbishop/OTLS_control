@@ -116,8 +116,7 @@ wheelObj = lsmfx.wheel(wheel_dict)
 etlObj = lsmfx.etl(etl_dict)
 stageObj = lsmfx.stage(stage_dict)
 
-print('mission accomplished!')
+# Begin scanning
 
-""" BEGIN SCANNING """
 # lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
 #              stageObj)

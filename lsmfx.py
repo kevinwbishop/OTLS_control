@@ -20,11 +20,7 @@ import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
 
-# TODO : change input to be one 'settings' dictionary with
-# cont: key entries for each variable, this will clean up code quite a bit
 
-
-# DONE
 class experiment(object):
     """
     A descriptive sentence
@@ -80,7 +76,6 @@ class experiment(object):
         self.overlap = experiment_dict['overlap']
 
 
-# NOT DONE
 class scan(object):
     def __init__(self, experiment, camera):
 
@@ -120,7 +115,6 @@ class scan(object):
         return speed
 
 
-# DONE
 class camera(object):
     def __init__(self,
                  camera_dict):
@@ -136,7 +130,6 @@ class camera(object):
         self.quantSigma = camera_dict['quantSigma']
 
 
-# DONE
 class daq(object):
     def __init__(self,
                  daq_dict):
@@ -154,10 +147,9 @@ class daq(object):
         self.eoffset = daq_dict['eoffset']
 
 
-# DONE
 class laser(object):
     def __init__(self,
-                laser_dict):
+                 laser_dict):
 
         self.port = laser_dict['port']
         self.rate = laser_dict['rate']
@@ -184,14 +176,12 @@ class laser(object):
         return skyraLaser
 
 
-# DONE
 class etl(object):
     def __init__(self,
                  etl_dict):
         self.port = etl_dict['port']
 
 
-# DONE
 class wheel(object):
     def __init__(self,
                  wheel_dict):
@@ -200,7 +190,6 @@ class wheel(object):
         self.names_to_channels = wheel_dict['names_to_channels']
 
 
-# DONE
 class stage(object):
     def __init__(self,
                  stage_dict):
