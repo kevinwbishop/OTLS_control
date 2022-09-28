@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+Interface to Optotune Focus Tunable Lens.
+Edited by Gan Gao in 09/22: enforced linting.
+"""
 import serial
 import time
 from ctypes import c_ushort
 
 
 class Opto(object):
+    """
+    Optotune Focus Tunable Lens interface class.
+    """
     def __init__(self, port=None):
         self.port = port
         self.crc_table = self._init_crc_table()
@@ -23,7 +29,7 @@ class Opto(object):
 
     def connect(self):
         """
-        Open the serial port and connect
+        Open the serial port and connect.
         """
         self.ser = serial.Serial()
         self.ser.baudrate = 115200
@@ -39,9 +45,9 @@ class Opto(object):
 
     def close(self, soft_close=None):
         """
-        Close the serial port
+        Close the serial port.
 
-        Args:
+        Parameters:
             soft_close (bool): Step-down the current and set to 0 before close.
         """
         if soft_close is None:
@@ -57,9 +63,9 @@ class Opto(object):
 
     def _send_cmd(self, cmd, include_crc=None, wait_for_resp=None):
         """
-        Send a command
+        Send a command.
 
-        Args:
+        Parameters:
             include_crc (bool): Append a CRC to the end of the command.
             wait_for_resp (bool): Return the response of the Optotune.
 
@@ -94,7 +100,7 @@ class Opto(object):
 
     def calc_crc(self, data):
         """
-        Calculate a CRC
+        Calculate a CRC.
         """
         crc = 0
         for d in data:
@@ -104,7 +110,7 @@ class Opto(object):
 
     def _init_crc_table(self, polynomial=None):
         """
-        Initialize the lookup table for CRC calculation
+        Initialize the lookup table for CRC calculation.
         """
         if polynomial is None:
             polynomial = 0xA001
@@ -121,14 +127,14 @@ class Opto(object):
 
     def handshake(self):
         """
-        Return 'start' to confirm connection (ID #0101)
+        Return 'start' to confirm connection (ID #0101).
         """
         r = self._send_cmd(b'Start', include_crc=False)
         return r
 
     def firmwaretype(self):
         """
-        Return firmware type (ID #0103)
+        Return firmware type (ID #0103).
         """
         r = self._send_cmd(b'H')
         self._firmwaretype = r[1]
@@ -136,7 +142,7 @@ class Opto(object):
 
     def firmwarebranch(self):
         """
-        Return firmware branch (ID #0104)
+        Return firmware branch (ID #0104).
         """
         r = self._send_cmd(b'F')
         self._firmwarebranch = r[1]
@@ -144,7 +150,7 @@ class Opto(object):
 
     def partnumber(self):
         """
-        Return part number (ID #0105)
+        Return part number (ID #0105).
         """
         r = self._send_cmd(b'J')
         self._partnumber = r[1:4]
@@ -152,13 +158,13 @@ class Opto(object):
 
     def current_upper(self, value=None):
         """
-        Get/set upper software current limit (ID #0402)
+        Get/set upper software current limit (ID #0402).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The upper software current limit
+            The upper software current limit.
         """
         if value is None:
             r = self._send_cmd(b'CrUA\x00\x00')
@@ -175,13 +181,13 @@ class Opto(object):
 
     def current_lower(self, value=None):
         """
-        Get/set lower software current limit (ID #0403)
+        Get/set lower software current limit (ID #0403).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The lower software current limit
+            The lower software current limit.
         """
         if value is None:
             r = self._send_cmd(b'CrLA\x00\x00')
@@ -198,10 +204,10 @@ class Opto(object):
 
     def firmwareversion(self):
         """
-        Return the firmware version (ID #0701)
+        Return the firmware version (ID #0701).
 
         Returns:
-            Major Revison, Minor Revision, Build and Revison
+            Major Revison, Minor Revision, Build and Revison.
         """
         r = self._send_cmd(b'V')
         self._firmwarerevision = '{}.{}.{}.{}'.format(
@@ -213,7 +219,7 @@ class Opto(object):
 
     def deviceid(self):
         """
-        Return device ID (ID #0901)
+        Return device ID (ID #0901).
         """
         r = self._send_cmd(b'IR\x00\x00\x00\x00\x00\x00\x00\x00')
         self._deviceid = r[2:]
@@ -221,7 +227,8 @@ class Opto(object):
 
     def gain(self, value=None):
         """
-        Get/set the gain variable for focal power drift compensation (ID #1100)
+        Get/set the gain variable for focal power drift compensation 
+        (ID #1100).
 
         Returns:
             Focal power range at the given temperature limits and given gain
@@ -249,7 +256,7 @@ class Opto(object):
 
     def serialnumber(self):
         """
-        Return serial number (ID #0102)
+        Return serial number (ID #0102).
         """
         r = self._send_cmd(b'X')
         self._serialnumber = r[1:]
@@ -257,13 +264,13 @@ class Opto(object):
 
     def current(self, value=None):
         """
-        Get/set current (ID #0201)
+        Get/set current (ID #0201).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The current
+            The current.
         """
         if value is None:
             r = self._send_cmd(b'Ar\x00\x00')
@@ -278,13 +285,13 @@ class Opto(object):
 
     def siggen_upper(self, value=None):
         """
-        Get/set signal generator upper current swing limit (ID #0305)
+        Get/set signal generator upper current swing limit (ID #0305).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The upper current swing limit
+            The upper current swing limit.
 
         Todo:
             Test
@@ -302,13 +309,13 @@ class Opto(object):
 
     def siggen_lower(self, value=None):
         """
-        Get/set signal generator lower current swing limit (ID #0306)
+        Get/set signal generator lower current swing limit (ID #0306).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The lower current swing limit
+            The lower current swing limit.
 
         Todo:
             Test
@@ -326,13 +333,13 @@ class Opto(object):
 
     def siggen_freq(self, value=None):
         """
-        Get/set signal generator frequency (ID #0307)
+        Get/set signal generator frequency (ID #0307).
 
-        Args:
-            value (float): Set frequency in Hz, None returns current value
+        Parameters:
+            value (float): Set frequency in Hz, None returns current value.
 
         Returns:
-            The signal generator frequency
+            The signal generator frequency.
 
         Todo:
             Test
@@ -349,13 +356,13 @@ class Opto(object):
 
     def temp_limits(self, value=None):
         """
-        Get/set the upper and lower temperature limits to channel A (ID #0309)
+        Get/set the upper and lower temperature limits to channel A (ID #0309).
 
         Returns:
             The achievable focal power range at the given temperature.
 
         Todo:
-            Better implement and test
+            Better implement and test.
         """
         if value is None:
             r = self._send_cmd(b'PrTA\x00\x00\x00\x00')
@@ -372,16 +379,17 @@ class Opto(object):
 
     def focalpower(self, value=None):
         """
-        Get/set focal power (ID #0310)
+        Get/set focal power (ID #0310).
 
-        Args:
-            value (float): Set frequency in diopters, None return current value
+        Parameters:
+            value (float): Set frequency in diopters, None return current 
+            value.
 
         Returns:
-            The focal power
+            The focal power.
 
         Todo:
-            Fix return format
+            Fix return format.
         """
         if value is None:
             r = self._send_cmd(b'PrDA\x00\x00\x00\x00')
@@ -397,13 +405,13 @@ class Opto(object):
 
     def current_max(self, value=None):
         """
-        Get/set maximum firmware output current (ID #0401)
+        Get/set maximum firmware output current (ID #0401).
 
-        Args:
-            value (float): Set current in mA, None returns current value
+        Parameters:
+            value (float): Set current in mA, None returns current value.
 
         Returns:
-            The maximum firmware output current
+            The maximum firmware output current.
         """
         if value is None:
             r = self._send_cmd(b'CrMA\x00\x00')
@@ -420,7 +428,7 @@ class Opto(object):
 
     def temp_reading(self):
         """
-        Return lens temperature (ID #0501)
+        Return lens temperature (ID #0501).
         """
         r = self._send_cmd(b'TCA')
         self._temp_reading = (int.from_bytes(r[3:5], byteorder='big',
@@ -429,7 +437,7 @@ class Opto(object):
 
     def get_status(self):
         """
-        Return firmware status information (ID #0503)
+        Return firmware status information (ID #0503).
         """
         r = self._send_cmd(b'Sr')
         self._status = r[1:]
@@ -437,9 +445,9 @@ class Opto(object):
 
     def eeprom_read(self, value):
         """
-        Read byte from EEPROM (ID #0609)
+        Read byte from EEPROM (ID #0609).
 
-        Args:
+        Parameters:
             value (byte): Address
 
         Returns:
@@ -454,7 +462,7 @@ class Opto(object):
 
     def analog_input(self):
         """
-        Return analog reading (ID #1001)
+        Return analog reading (ID #1001).
 
         Todo:
             Test
@@ -464,9 +472,9 @@ class Opto(object):
 
     def eeprom_write(self, address, value):
         """
-        Write byte to EEPROM (ID #9998)
+        Write byte to EEPROM (ID #9998).
 
-        Args:
+        Parameters:
             address (byte): Address
             value (byte): Byte to be written
 
@@ -483,7 +491,7 @@ class Opto(object):
 
     def eeprom_contents(self):
         """
-        Dump contents of EEPROM (ID #9999)
+        Dump contents of EEPROM (ID #9999).
 
         Todo:
             Test
@@ -493,14 +501,14 @@ class Opto(object):
 
     def mode(self, mode_str=None):
         """
-        Get/set operation mode (ID #0301, 0302, 0303, 0304, 0308, 0321)
+        Get/set operation mode (ID #0301, 0302, 0303, 0304, 0308, 0321).
 
-        Args:
+        Parameters:
             mode_str (str): Mode ['sinusoidal', 'rectangular', 'current',
-                                  'triangular', 'focal','analog']
+                                  'triangular', 'focal','analog'].
 
         Returns:
-            Current operation mode as a string
+            Current operation mode as a string.
         """
         if mode_str is None:
             modes = {1: 'current',
