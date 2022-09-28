@@ -164,6 +164,9 @@ class camera(object):
         self.expTime = camera_dict['expTime']
         self.triggerMode = camera_dict['triggerMode']
         self.acquireMode = camera_dict['acquireMode']
+        self.shutterMode = camera_dict['shutterMode']
+        self.compressionMode = camera_dict['compressionMode']
+        self.quantSigma = camera_dict['quantSigma']
 
 
 class daq(object):
