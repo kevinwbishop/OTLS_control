@@ -5,7 +5,6 @@ Edited by Kevin Bishop 5/22 (replaced explicit definition of Dev2 w/ daq.board)
 Edited by Gan 09/22: enforced linting and added doc strings. Deleted imported
 packages that are unused. Deleted codes that are commented out.
 """
-
 import nidaqmx
 import numpy
 
