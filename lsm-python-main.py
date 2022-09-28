@@ -101,19 +101,22 @@ daq_dict['eoffset'] = {'405': 2.6300,
 camera_dict['sampling'] = um_per_px
 
 experiment_dict['xWidth'] = um_per_px  # um
-experiment_dict.yWidth = (camera_dict['X'] - experiment_dict['overlap']) \
-                        * um_per_px / 1000  # mm
-experiment_dict.zWidth = (camera_dict['Y'] / 1.4142 -
-                          experiment_dict['overlap']) * um_per_px / 1000  # mm
+experiment_dict['yWidth'] = \
+    (camera_dict['X'] - experiment_dict['overlap']) * um_per_px / 1000  # mm
+experiment_dict['zWidth'] = \
+    (camera_dict['Y'] / 1.4142 - experiment_dict['overlap']) * \
+    um_per_px / 1000  # mm
 
 # construct objects
-cameraObj = lsmfx(camera_dict)
-experimentObj = lsmfx(experiment_dict)
-daqObj = lsmfx(daq_dict)
-laserObj = lsmfx(laser_dict)
-wheelObj = lsmfx(wheel_dict)
-etlObj = lsmfx(etl_dict)
-stageObj = lsmfx(stage_dict)
+cameraObj = lsmfx.camera(camera_dict)
+experimentObj = lsmfx.experiment(experiment_dict)
+daqObj = lsmfx.daq(daq_dict)
+laserObj = lsmfx.laser(laser_dict)
+wheelObj = lsmfx.wheel(wheel_dict)
+etlObj = lsmfx.etl(etl_dict)
+stageObj = lsmfx.stage(stage_dict)
+
+print('mission accomplished!')
 
 """ BEGIN SCANNING """
 # lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,

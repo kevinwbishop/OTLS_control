@@ -133,6 +133,7 @@ class scan(object):
         return speed
 
 
+'''
 class camera(object):
     def __init__(self,
                  number=[],
@@ -150,6 +151,19 @@ class camera(object):
         self.expTime = expTime
         self.triggerMode = triggerMode
         self.acquireMode = acquireMode
+'''
+
+
+class camera(object):
+    def __init__(self,
+                 camera_dict):
+        self.number = camera_dict['number']
+        self.X = camera_dict['X']
+        self.Y = camera_dict['Y']
+        self.sampling = camera_dict['sampling']
+        self.expTime = camera_dict['expTime']
+        self.triggerMode = camera_dict['triggerMode']
+        self.acquireMode = camera_dict['acquireMode']
 
 
 class daq(object):
