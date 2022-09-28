@@ -408,14 +408,16 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                         temp = cam.image(num_acquired)[0]
 
                         ring_buffer[num_acquired_counter] = \
-                            temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024 - int(camera.X / 2) + camera.X]
+                            temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
+                                 - int(camera.X / 2) + camera.X]
 
                     else:
 
                         temp = cam.image(num_acquired)[0]
 
-                        ring_buffer[num_acquired_counter] = temp[2:camera.Y+2,
-                                                                 1024-int(camera.X/2):1024 -int(camera.X/2)+camera.X]
+                        ring_buffer[num_acquired_counter] = \
+                            temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
+                                 - int(camera.X / 2) + camera.X]
 
                     if num_acquired == session.nFrames-1:
                         print('Saving frames: ',
@@ -435,7 +437,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 waveformGenerator.ao_task.stop()
                 waveformGenerator.write_zeros(daq=daq)
                 # For some reason this write_zeros works but the above doesn't?
-                # laser stops and starts appropriately with this one active 
+                # laser stops and starts appropriately with this one active
                 # and the top write_zeros() commented out
 
                 skyraLaser.turnOff(list(experiment.wavelengths)[ch])
@@ -444,7 +446,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 tile_end_time = timer.time()
                 tile_time = tile_end_time - tile_start_time
                 print('Tile time: ' + str(round((tile_time/60), 3)) + " min")
-                tiles_remaining = session.nWavelengths*session.zTiles*session.yTiles - (tile*session.nWavelengths+ch+1)
+                tiles_remaining = session.nWavelengths * session.zTiles * \
+                    session.yTiles - (tile * session.nWavelengths + ch + 1)
 
                 if tiles_remaining != 0:
                     print('Estimated time remaining: ',
@@ -492,29 +495,63 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     voltages = np.zeros((daq.num_channels, samples))  # create voltages array
 
     # X Galvo scanning:
-    period_samples = np.linspace(0, 2*math.pi, on_samples+2*buffer_samples)
-    snap_back = np.linspace(daq.xoffset[list(experiment.wavelengths)[ch]] + daq.xamplitude[list(experiment.wavelengths)[ch]], daq.xoffset[list(experiment.wavelengths)[ch]]-daq.xamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
-    voltages[n2c['xgalvo'],:] = daq.xoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['xgalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.xamplitude[list(experiment.wavelengths)[ch]]/math.pi)*np.arctan(1.0/(np.tan(period_samples/2.0)))+daq.xoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['xgalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
-    voltages[n2c['xgalvo'], 0:roll_samples-galvo_samples-buffer_samples] = snap_back[samples-(roll_samples+on_samples-galvo_samples+buffer_samples):samples]
+    period_samples = np.linspace(0,
+                                 2 * math.pi, on_samples + 2 * buffer_samples)
+    snap_back = np.linspace(daq.xoffset[list(experiment.wavelengths)[ch]] +
+                            daq.xamplitude[list(experiment.wavelengths)[ch]],
+                            daq.xoffset[list(experiment.wavelengths)[ch]] -
+                            daq.xamplitude[list(experiment.wavelengths)[ch]],
+                            samples - on_samples - 2 * buffer_samples)
+    voltages[n2c['xgalvo'], :] = daq.xoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['xgalvo'],
+             roll_samples - galvo_samples - buffer_samples:
+             roll_samples + on_samples - galvo_samples + buffer_samples] = \
+        -2 * (daq.xamplitude[list(experiment.wavelengths)[ch]] / math.pi) * \
+        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + \
+        daq.xoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['xgalvo'],
+             roll_samples + on_samples - galvo_samples + buffer_samples:
+             samples] = \
+        snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
+                  buffer_samples)]
+    voltages[n2c['xgalvo'],
+             0:roll_samples - galvo_samples - buffer_samples] = \
+        snap_back[samples - (roll_samples + on_samples - galvo_samples +
+                  buffer_samples):samples]
 
     # Y Galvo scanning:
-    period_samples = np.linspace(0, 2*math.pi, on_samples+2*buffer_samples)
-    snap_back = np.linspace(daq.yoffset[list(experiment.wavelengths)[ch]]+daq.yamplitude[list(experiment.wavelengths)[ch]], daq.yoffset[list(experiment.wavelengths)[ch]]-daq.yamplitude[list(experiment.wavelengths)[ch]], samples-on_samples-2*buffer_samples)
-    voltages[n2c['ygalvo'],:] = daq.yoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['ygalvo'], roll_samples-galvo_samples-buffer_samples:roll_samples+on_samples-galvo_samples+buffer_samples]=-2*(daq.yamplitude[list(experiment.wavelengths)[ch]]/math.pi)*np.arctan(1.0/(np.tan(period_samples/2.0)))+daq.yoffset[list(experiment.wavelengths)[ch]]
-    voltages[n2c['ygalvo'], roll_samples+on_samples-galvo_samples+buffer_samples:samples] = snap_back[0:samples-(roll_samples+on_samples-galvo_samples+buffer_samples)]
-    voltages[n2c['ygalvo'], 0:roll_samples-galvo_samples-buffer_samples] = snap_back[samples-(roll_samples+on_samples-galvo_samples+buffer_samples):samples]
+    period_samples = np.linspace(0,
+                                 2 * math.pi, on_samples + 2 * buffer_samples)
+    snap_back = np.linspace(daq.yoffset[list(experiment.wavelengths)[ch]] +
+                            daq.yamplitude[list(experiment.wavelengths)[ch]],
+                            daq.yoffset[list(experiment.wavelengths)[ch]] -
+                            daq.yamplitude[list(experiment.wavelengths)[ch]],
+                            samples - on_samples - 2 * buffer_samples)
+    voltages[n2c['ygalvo'], :] = daq.yoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['ygalvo'],
+             roll_samples - galvo_samples - buffer_samples:
+             roll_samples + on_samples-galvo_samples + buffer_samples] = \
+        -2 * (daq.yamplitude[list(experiment.wavelengths)[ch]] / math.pi) * \
+        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + \
+        daq.yoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['ygalvo'],
+             roll_samples + on_samples - galvo_samples + buffer_samples:
+             samples] = \
+        snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
+                  buffer_samples)]
+    voltages[n2c['ygalvo'],
+             0:roll_samples - galvo_samples - buffer_samples] = \
+        snap_back[samples - (roll_samples + on_samples - galvo_samples +
+                  buffer_samples):samples]
 
     # Laser modulation:
     if laser.strobing == 'ON':
         voltages[n2c[list(experiment.wavelengths)[ch]],
-                 roll_samples+50:roll_samples+on_samples-50] = 5.0
+                 roll_samples + 50:roll_samples + on_samples - 50] = 5.0
         voltages[n2c[list(experiment.wavelengths)[ch]], 0] = 0.0
         voltages[n2c[list(experiment.wavelengths)[ch]], -1] = 0.0
     elif laser.strobing == 'OFF':
-        voltages[n2c[list(experiment.wavelengths)[ch]],:] = 5.0
+        voltages[n2c[list(experiment.wavelengths)[ch]], :] = 5.0
     else:
         raise Exception('laser.strobing invalid, must be \'ON\' or \'OFF\'')
 
@@ -523,7 +560,6 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
 
     # NI playing:
     voltages[n2c['daq_active'], :] = 3.0
-
 
     # for c in range(12):
     # 	plt.plot(voltages[c, :])
@@ -548,7 +584,7 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
 
 
 def zero_voltages(daq, camera):
-    samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
+    # samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
     voltages = np.zeros((daq.num_channels, 2))  # create voltages array
     return voltages
 
@@ -647,7 +683,7 @@ def h5write(dest, img_3d, idx, ind1, ind2):
     for z in range(len(res_list)):
         res = res_list[z]
         if res > 1:
-            img_3d = skimage.transform.downscale_local_mean(img_3d, 
+            img_3d = skimage.transform.downscale_local_mean(img_3d,
                                                             (2, 2, 2)
                                                             ).astype('uint16')
 
@@ -656,7 +692,7 @@ def h5write(dest, img_3d, idx, ind1, ind2):
         else:
             ind1_r = np.ceil((ind1 + 1)/res - 1)
 
-        data = f['/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells']	
+        data = f['/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells']
         data[int(ind1_r):int(ind1_r+img_3d.shape[0])] = img_3d.astype('int16')
 
     f.close()
