@@ -24,7 +24,7 @@ import time as timer
 # cont: key entries for each variable, this will clean up code quite a bit
 
 
-# NOT DONE
+# DONE
 class experiment(object):
     """
     A descriptive sentence
@@ -60,39 +60,24 @@ class experiment(object):
     """
 
     def __init__(self,
-                 drive=[],
-                 fname=[],
-                 xMin=[],
-                 xMax=[],
-                 yMin=[],
-                 yMax=[],
-                 zMin=[],
-                 zMax=[],
-                 xWidth=[],
-                 yWidth=[],
-                 zWidth=[],
-                 wavelengths=[],
-                 powers=[],
-                 attenuations=[],
-                 theta=[],
-                 overlap=[]):
+                 experiment_dict):
 
-        self.drive = drive
-        self.fname = fname
-        self.xMin = xMin
-        self.xMax = xMax
-        self.yMin = yMin
-        self.yMax = yMax
-        self.zMin = zMin
-        self.zMax = zMax
-        self.xWidth = xWidth
-        self.yWidth = yWidth
-        self.zWidth = zWidth
-        self.wavelengths = wavelengths
-        self.powers = powers
-        self.attenuations = attenuations
-        self.theta = theta
-        self.overlap = overlap
+        self.drive = experiment_dict['drive']
+        self.fname = experiment_dict['fname']
+        self.xMin = experiment_dict['xMin']
+        self.xMax = experiment_dict['xMax']
+        self.yMin = experiment_dict['yMin']
+        self.yMax = experiment_dict['yMax']
+        self.zMin = experiment_dict['zMin']
+        self.zMax = experiment_dict['zMax']
+        self.xWidth = experiment_dict['xWidth']
+        self.yWidth = experiment_dict['yWidth']
+        self.zWidth = experiment_dict['zWidth']
+        self.wavelengths = experiment_dict['wavelengths']
+        # self.powers = powers
+        self.attenuations = experiment_dict['attenuations']
+        self.theta = experiment_dict['theta']
+        self.overlap = experiment_dict['overlap']
 
 
 # NOT DONE
