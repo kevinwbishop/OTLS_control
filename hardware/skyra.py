@@ -2,18 +2,19 @@
 """
 Cobolt Skyra control.
 
-# Adam Glaser 07/19
-
-# Made max min currents a variable, but still hardcoded in set max/min. Note these values change
-  with the specific laser as they are factory calibrated - KB 2022
-
+Adam Glaser 07/19
+KB 2022: Made max min currents a variable, but still hardcoded in set max/min.
+Note these values change with the specific laser as they are factory
+calibrated.
+GG 09/22: enforced linting and added doc strings.
 """
 import hardware.RS232 as RS232
 
 
 class Skyra(RS232.RS232):
     """
-    Encapsulates communication with a Cobolt Skyra that is connected via RS-232.
+    Encapsulates communication with a Cobolt Skyra that is connected
+    via RS-232.
     """
     def __init__(self, **kwds):
 
@@ -40,20 +41,20 @@ class Skyra(RS232.RS232):
         Turn laser ON.
         """
         self.sendCommand(str(wavelength) + "l1")
-        self.waitResponse() 
+        self.waitResponse()
 
     def turnOff(self, wavelength):
         """
         Turn laser OFF.
         """
         self.sendCommand(str(wavelength) + "l0")
-        self.waitResponse() 
+        self.waitResponse()
 
     def setPower(self, wavelength, power):
         """
         Set the laser power.
         """
-        power = power/1000 # convert to W
+        power = power/1000  # convert to W
         self.sendCommand(str(wavelength) + "p " + str(power))
         self.waitResponse() 
 
@@ -105,7 +106,7 @@ class Skyra(RS232.RS232):
         waveMin = self.minCurrents[wavelength-1]
         waveMax = self.maxCurrents[wavelength-1]
 
-        current =  waveMin + power*(waveMax - waveMin)
+        current = waveMin + power*(waveMax - waveMin)
 
         assert current <= waveMax
         assert current > self.getModulationLowCurrent(wavelength)
@@ -155,10 +156,11 @@ class Skyra(RS232.RS232):
         print('Setting low current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
 
         self.sendCommand(str(wavelength) + "slth " + str(current))  
-        self.waitResponse() 
-        
+        self.waitResponse()
+
+
 if (__name__ == "__main__"):
-    laser = skyra()
+    laser = Skyra()
     laser.shutDown()
 
 #
