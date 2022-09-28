@@ -133,27 +133,6 @@ class scan(object):
         return speed
 
 
-'''
-class camera(object):
-    def __init__(self,
-                 number=[],
-                 X=[],
-                 Y=[],
-                 sampling=[],
-                 expTime=[],
-                 triggerMode=[],
-                 acquireMode=[]):
-
-        self.number = number
-        self.X = X
-        self.Y = Y
-        self.sampling = sampling
-        self.expTime = expTime
-        self.triggerMode = triggerMode
-        self.acquireMode = acquireMode
-'''
-
-
 class camera(object):
     def __init__(self,
                  camera_dict):
@@ -171,17 +150,20 @@ class camera(object):
 
 class daq(object):
     def __init__(self,
-                 rate=[],
-                 name=[],
-                 board=[],
-                 num_channels=[],
-                 names_to_channels=[]):
+                 daq_dict):
 
-        self.rate = rate
-        self.board = board
-        self.name = name
-        self.num_channels = num_channels
-        self.names_to_channels = names_to_channels
+        self.rate = daq_dict['rate']
+        self.board = daq_dict['board']
+        # self.name = daq_dict['name']
+        self.num_channels = daq_dict['num_channels']
+        self.names_to_channels = daq_dict['names_to_channels']
+        self.xamplitude = daq_dict['xamplitude']
+        self.xoffset = daq_dict['xoffset']
+        self.yamplitude = daq_dict['yamplitude']
+        self.yoffset = daq_dict['yoffset']
+        self.eamplitude = daq_dict['eamplitude']
+        self.eoffset = daq_dict['eoffset']
+
 
 
 class laser(object):
