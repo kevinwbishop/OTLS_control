@@ -43,21 +43,18 @@ camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'K'
-experiment_dict['fname'] = 'power_testing'  # specimen names
+experiment_dict['fname'] = 'code_testing'  # specimen names
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = 0.0  # mm
-experiment_dict['xMax'] = 0.1  # mm
-experiment_dict['yMin'] = 0.0  # mm
-experiment_dict['yMax'] = 0.5  # mm
-experiment_dict['zMin'] = -1.0  # mm
+experiment_dict['xMin'] = 10.0  # mm
+experiment_dict['xMax'] = 10.5  # mm
+experiment_dict['yMin'] = 10.0  # mm
+experiment_dict['yMax'] = 10.5  # mm
+experiment_dict['zMin'] = -0.5  # mm
 experiment_dict['zMax'] = 0.0  # mm
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'405': 1.0,
-                                  '488': 1.0,
-                                  '561': 1.0,
-                                  '638': 1.0}
+experiment_dict['wavelengths'] = {'561': 1.0}
 
 
 experiment_dict['attenuations'] = {'405': 1.4,
@@ -67,22 +64,22 @@ experiment_dict['attenuations'] = {'405': 1.4,
 
 
 # all daq amplitudes are in Volts
-daq_dict['xamplitude'] = {'405': 0.1400,
+daq_dict['xamplitude'] = {'405': 0.3000,
                           '488': 0.3000,
-                          '561': 0.1400,
+                          '561': 1.0000,
                           '638': 0.3000}
 
-daq_dict['xoffset'] = {'405': -0.040,
-                       '488': 1.1750,
-                       '561': -0.040,
-                       '638': 1.1750}
+daq_dict['xoffset'] = {'405': 1.1825,
+                       '488': 1.1825,
+                       '561': 1.0000,
+                       '638': 1.1825}
 
-daq_dict['yamplitude'] = {'405': 0.0017,
-                          '488': 0.0195,
+daq_dict['yamplitude'] = {'405': 0.0200,
+                          '488': 0.0200,
                           '561': 0.0200,
-                          '638': 0.0195}
+                          '638': 0.0200}
 
-daq_dict['yoffset'] = {'405': 0.1200,
+daq_dict['yoffset'] = {'405': 0.0625,
                        '488': 0.0650,
                        '561': 0.0575,
                        '638': 0.0650}
@@ -116,7 +113,9 @@ wheelObj = lsmfx.wheel(wheel_dict)
 etlObj = lsmfx.etl(etl_dict)
 stageObj = lsmfx.stage(stage_dict)
 
+print('potato')
+
 # Begin scanning
 
-# lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
-#              stageObj)
+lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
+             stageObj)

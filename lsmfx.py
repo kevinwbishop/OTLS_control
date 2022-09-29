@@ -80,10 +80,10 @@ class scan(object):
     def __init__(self, experiment, camera):
 
         self.xLength = experiment.xMax - experiment.xMin  # mm
-        self.yLength = experiment.yWidth*round(
-                (experiment.yMax - experiment.yMin)/experiment.yWidth)  # mm
-        self.zLength = experiment.zWidth*round(
-                (experiment.zMax - experiment.zMin)/experiment.zWidth)  # mm
+        self.yLength = round(
+                (experiment.yMax - experiment.yMin)/experiment.yWidth)*experiment.yWidth  # mm
+        self.zLength = round(
+                (experiment.zMax - experiment.zMin)/experiment.zWidth)*experiment.zWidth  # mm
         self.xOff = experiment.xMax - self.xLength/2
         self.yOff = experiment.yMax - self.yLength/2
         self.zOff = experiment.zMin
@@ -111,10 +111,11 @@ class scan(object):
 
     def setScanSpeed(self, xWidth, expTime):
 
-        speed = xWidth/(1.0/(1.0/(expTime + 10.0e-3)/1000.0)*1000.0)
+        speed = xWidth/(1.0/(1.0/((expTime + 10.0e-3)/1000.0))*1000.0)
         return speed
 
 
+# TODO: Change name to camera_settings
 class camera(object):
     def __init__(self,
                  camera_dict):
@@ -146,6 +147,8 @@ class daq(object):
         self.eamplitude = daq_dict['eamplitude']
         self.eoffset = daq_dict['eoffset']
 
+        print(daq_dict)
+
 
 class laser(object):
     def __init__(self,
@@ -159,6 +162,7 @@ class laser(object):
 
     def initialize(self, experiment):
 
+        print('initializing laser')
         skyraLaser = skyra.Skyra(baudrate=self.rate, port=self.port)
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])
@@ -173,6 +177,7 @@ class laser(object):
         for ch in list(experiment.wavelengths):
             skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0)
 
+        print('finished initializing laser')
         return skyraLaser
 
 
@@ -203,25 +208,31 @@ class stage(object):
 
     def initialize(self):
 
+        print('initializing stage')
         xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
         initialPos = xyzStage.getPosition()
         xyzStage.setPLCPreset(6, 52)  # new command for Tiger
         xyzStage.setScanF(1)
         for ax in self.axes:
+            print(ax)
             xyzStage.setBacklash(ax, self.settings['backlash'])
             xyzStage.setVelocity(ax, self.settings['velocity'])
             xyzStage.setAcceleration(ax, self.settings['acceleration'])
+        print('stage initialized', initialPos)
         return xyzStage, initialPos
 
 
 # TODO: break apart into smaller pieces:
 # initialize hardware
 # scan tiles
+
 def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     # ROUND SCAN DIMENSIONS & SETUP IMAGING SESSION
     session = scan(experiment, camera)
 
+    print('made session')
+    print(experiment.xMax - experiment.xMin, session.xLength)
     # SETUP DATA DIRECTORY
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
@@ -244,7 +255,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # according to the manual, you should wait for 2min after setting
     # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
     # TODO: disentangle laser and experiment attributes
-    skyraLaser = laser.initalize(experiment)
+    skyraLaser = laser.initialize(experiment)
     print(skyraLaser)
 
     # CONNECT FILTER WHEEL
@@ -285,6 +296,9 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     # print('made ring buffer')
     tile = 0
+    previous_tile_time = 0
+    previous_ram = 0
+
     start_time = timer.time()
 
     xPos = session.xLength/2.0 - session.xOff
@@ -297,8 +311,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
         for k in range(session.yTiles):
 
-            yPos = session.yOff - session.yLength / 2.0 + k * \
-                experiment.yWidth + experiment.yWidth / 2.0
+            yPos = session.yOff-session.yLength/2.0+k*experiment.yWidth+experiment.yWidth/2.0
+
             xyzStage.setVelocity('Y', 1.0)
             xyzStage.goAbsolute('Y', yPos, False)
 
@@ -370,6 +384,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # like cam is a frame or two ahead of code
                 while num_acquired < session.nFrames - 100:
 
+                    print('you\'ve got an image!', num_acquired, 'of', 
+                          session.nFrames, 'total')
                     cam.wait_for_next_image(num_acquired)
 
                     if num_acquired_counter == int(session.blockSize):
@@ -454,6 +470,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
 def write_voltages(daq, laser, camera, experiment, scan, ch):
 
+    print('writing voltages')
     n2c = daq.names_to_channels
 
     samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
@@ -558,6 +575,8 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     assert np.min(voltages[n2c['daq_active'], :]) >= 0.0
     assert np.max(voltages[n2c[list(experiment.wavelengths)[ch]], :]) <= 5.0
     assert np.min(voltages[n2c[list(experiment.wavelengths)[ch]], :]) >= 0.0
+
+    print('wrote voltages')
 
     return voltages, (camera.expTime/1e3-2*roll_time)*1000
 
