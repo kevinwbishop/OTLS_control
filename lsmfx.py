@@ -200,7 +200,7 @@ class stage(object):
                  stage_dict):
         self.port = stage_dict['port']
         self.rate = stage_dict['rate']
-        self.settings = {'backlash': 0,
+        self.settings = {'backlash': 0.0,
                          'velocity': 1.0,
                          'acceleration': 100
                          }
@@ -384,8 +384,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # like cam is a frame or two ahead of code
                 while num_acquired < session.nFrames - 100:
 
-                    print('you\'ve got an image!', num_acquired, 'of', 
-                          session.nFrames, 'total')
+                    # print('you\'ve got an image!', num_acquired, 'of', 
+                    #       session.nFrames, 'total')
                     cam.wait_for_next_image(num_acquired)
 
                     if num_acquired_counter == int(session.blockSize):

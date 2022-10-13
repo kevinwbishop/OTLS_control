@@ -39,19 +39,19 @@ stage_dict = static_params['stage']
 
 # CAMERA PARAMETERS
 camera_dict['expTime'] = 10.0  # ms
-camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
+camera_dict['quantSigma'] = {'405': 0.0, '488': 0.0, '561': 0.0, '638': 0.0}
 
 # FILE PARAMETERS
-experiment_dict['drive'] = 'K'
+experiment_dict['drive'] = 'E'
 experiment_dict['fname'] = 'code_testing'  # specimen names
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = 10.0  # mm
-experiment_dict['xMax'] = 10.5  # mm
-experiment_dict['yMin'] = 10.0  # mm
-experiment_dict['yMax'] = 10.5  # mm
-experiment_dict['zMin'] = -0.5  # mm
-experiment_dict['zMax'] = 0.0  # mm
+experiment_dict['xMin'] = 0.5  # mm
+experiment_dict['xMax'] = 1.0  # mm
+experiment_dict['yMin'] = 0.0  # mm
+experiment_dict['yMax'] = 1.5  # mm
+experiment_dict['zMin'] = 0.0  # mm
+experiment_dict['zMax'] = 0.2  # mm
 
 # set experiment wavelenths here, power in mW
 experiment_dict['wavelengths'] = {'561': 1.0}
@@ -66,12 +66,12 @@ experiment_dict['attenuations'] = {'405': 1.4,
 # all daq amplitudes are in Volts
 daq_dict['xamplitude'] = {'405': 0.3000,
                           '488': 0.3000,
-                          '561': 1.0000,
+                          '561': 0.3000,
                           '638': 0.3000}
 
 daq_dict['xoffset'] = {'405': 1.1825,
                        '488': 1.1825,
-                       '561': 1.0000,
+                       '561': 1.1825,
                        '638': 1.1825}
 
 daq_dict['yamplitude'] = {'405': 0.0200,
@@ -81,8 +81,8 @@ daq_dict['yamplitude'] = {'405': 0.0200,
 
 daq_dict['yoffset'] = {'405': 0.0625,
                        '488': 0.0650,
-                       '561': 0.0575,
-                       '638': 0.0650}
+                       '561': 0.0680,
+                       '638': 0.0675}
 
 daq_dict['eamplitude'] = {'405': 0.0000,
                           '488': 0.0000,
@@ -91,8 +91,8 @@ daq_dict['eamplitude'] = {'405': 0.0000,
 
 daq_dict['eoffset'] = {'405': 2.6300,
                        '488': 2.5000,
-                       '561': 2.5850,
-                       '638': 2.5000}
+                       '561': 2.5100,
+                       '638': 2.5100}
 
 # compute remaining parameters
 camera_dict['sampling'] = um_per_px

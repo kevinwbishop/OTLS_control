@@ -14,7 +14,7 @@
     },
     "daq": {
         "rate": 400000.0,
-        "board": "Dev3",
+        "board": "Dev1",
         "num_channels": 32,
         "names_to_channels": {
             "xgalvo": 0,
@@ -32,7 +32,7 @@
         }
     },
     "laser": {
-        "port": "COM4",
+        "port": "COM3",
         "rate": 9600,
         "names_to_channels": {
             "405": 4,
@@ -49,22 +49,22 @@
         "strobing": "OFF"
     },
     "wheel": {
-        "port": "COM6",
+        "port": "COM5",
         "rate": 115200,
         "names_to_channels": {
             "405": 1,
             "488": 2,
-            "561": 3,
+            "561": 6,
             "638": 4,
             "660": 5,
             "none": 6
         }
     },
     "etl": {
-        "port": "COM5"
+        "port": "COM6"
     },
     "stage": {
-        "port": "COM3",
+        "port": "COM4",
         "rate": 115200
     }
 }
