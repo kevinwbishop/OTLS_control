@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#New code adapter for OTLS 4 NODO
+
 import lsmfx
 import json
 
@@ -21,7 +23,7 @@ from lsmfx import stage
 # pass dicts to class constructors
 # pass objects to scan3D
 
-um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
+um_per_px = 0.197  # microns        0.43 for water, 0.3846 for ECi
 
 # import static parameters
 with open('static_params.json', 'r') as read_file:
@@ -38,23 +40,33 @@ stage_dict = static_params['stage']
 # Set user-defined paramters
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 10.0  # ms
+camera_dict['expTime'] = 5.0  # ms
 camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # FILE PARAMETERS
-experiment_dict['drive'] = 'K'
-experiment_dict['fname'] = 'code_testing'  # specimen names
+experiment_dict['drive'] = 'A'
+experiment_dict['fname'] = 'Nanostring_BM-uncleared-sybr-gold_1mW-5ms-2'  # specimen names
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = 10.0  # mm
-experiment_dict['xMax'] = 10.5  # mm
-experiment_dict['yMin'] = 10.0  # mm
-experiment_dict['yMax'] = 10.5  # mm
-experiment_dict['zMin'] = -0.5  # mm
-experiment_dict['zMax'] = 0.0  # mm
+
+experiment_dict['xMin'] = -2.41  # mm
+experiment_dict['xMax'] = -2.21  # mm
+experiment_dict['yMin'] = 7.56  # mm
+experiment_dict['yMax'] = 8.02  # mm
+experiment_dict['zMin'] = -8.67  # mm
+experiment_dict['zMax'] = -8.59  # mm
+
+'''
+experiment_dict['xMin'] = -2.41  # mm
+experiment_dict['xMax'] = 0.11  # mm
+experiment_dict['yMin'] = 7.26  # mm
+experiment_dict['yMax'] = 8.02  # mm
+experiment_dict['zMin'] = -8.67  # mm
+experiment_dict['zMax'] = -8.59  # mm
+'''
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'561': 1.0}
+experiment_dict['wavelengths'] = {'488': 5.0}
 
 
 experiment_dict['attenuations'] = {'405': 1.4,
@@ -64,25 +76,25 @@ experiment_dict['attenuations'] = {'405': 1.4,
 
 
 # all daq amplitudes are in Volts
-daq_dict['xamplitude'] = {'405': 0.3000,
-                          '488': 0.3000,
-                          '561': 1.0000,
-                          '638': 0.3000}
+daq_dict['xamplitude'] = {'405': 0.1400,
+                          '488': 0.1400,
+                          '561': 0.1400,
+                          '638': 0.1400}
 
-daq_dict['xoffset'] = {'405': 1.1825,
-                       '488': 1.1825,
-                       '561': 1.0000,
-                       '638': 1.1825}
+daq_dict['xoffset'] = {'405': -0.042,
+                       '488': -0.042,
+                       '561': -0.042,
+                       '638': -0.042}
 
-daq_dict['yamplitude'] = {'405': 0.0200,
-                          '488': 0.0200,
-                          '561': 0.0200,
-                          '638': 0.0200}
+daq_dict['yamplitude'] = {'405': 0.00325,
+                          '488': 0.00325,
+                          '561': 0.00325,
+                          '638': 0.00325}
 
-daq_dict['yoffset'] = {'405': 0.0625,
-                       '488': 0.0650,
-                       '561': 0.0575,
-                       '638': 0.0650}
+daq_dict['yoffset'] = {'405': 0.0875,
+                       '488': 0.0890,
+                       '561': 0.0875,
+                       '638': 0.0875}
 
 daq_dict['eamplitude'] = {'405': 0.0000,
                           '488': 0.0000,
@@ -92,7 +104,7 @@ daq_dict['eamplitude'] = {'405': 0.0000,
 daq_dict['eoffset'] = {'405': 2.6300,
                        '488': 2.5000,
                        '561': 2.5850,
-                       '638': 2.5000}
+                       '638': 2.5200}
 
 # compute remaining parameters
 camera_dict['sampling'] = um_per_px

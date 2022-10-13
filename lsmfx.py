@@ -13,7 +13,8 @@ import h5py
 import os.path
 import skimage.transform
 import pco
-import hardware.tiger as tiger
+#import hardware.tiger as tiger
+import hardware.ms2000 as ms2000
 import hardware.ni as ni
 import hardware.fw102c as fw102c
 import hardware.skyra as skyra
@@ -171,11 +172,14 @@ class laser(object):
             #  new, to ensure analog mod is not active
             skyraLaser.setAnalogModulation(self.names_to_channels[ch], 0)
         for ch in list(experiment.wavelengths):
-            skyraLaser.setModulationHighCurrent(self.names_to_channels[ch],
-                                                experiment.wavelengths[ch])
+            skyraLaser.setModulationHighCurrent(self.names_to_channels[ch], experiment.wavelengths[ch],False)
+
+            #skyraLaser.setModulationHighCurrent(self.names_to_channels[ch],
+            #                                    experiment.wavelengths[ch])
             skyraLaser.turnOn(self.names_to_channels[ch])
         for ch in list(experiment.wavelengths):
-            skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0)
+            
+            skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0, False)
 
         print('finished initializing laser')
         return skyraLaser
@@ -201,17 +205,34 @@ class stage(object):
         self.port = stage_dict['port']
         self.rate = stage_dict['rate']
         self.settings = {'backlash': 0,
-                         'velocity': 1.0,
+                         'velocity': 0.1,
                          'acceleration': 100
                          }
         self.axes = ('X', 'Y', 'Z')
 
+        '''
     def initialize(self):
 
         print('initializing stage')
         xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
         initialPos = xyzStage.getPosition()
         xyzStage.setPLCPreset(6, 52)  # new command for Tiger
+        xyzStage.setScanF(1)
+        for ax in self.axes:
+            print(ax)
+            xyzStage.setBacklash(ax, self.settings['backlash'])
+            xyzStage.setVelocity(ax, self.settings['velocity'])
+            xyzStage.setAcceleration(ax, self.settings['acceleration'])
+        print('stage initialized', initialPos)
+        return xyzStage, initialPos
+        '''
+    def initialize_MS2000(self):
+
+        print('initializing stage')
+        xyzStage = ms2000.MS2000(baudrate=self.rate, port=self.port)
+        initialPos = xyzStage.getPosition()
+        #xyzStage.setPLCPreset(6, 52)  # new command for Tiger
+        xyzStage.setTTL("Y",3)
         xyzStage.setScanF(1)
         for ax in self.axes:
             print(ax)
@@ -238,7 +259,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
 
     #  CONNECT XYZ STAGE
-    xyzStage, initialPos = stage.initialize()
+    xyzStage, initialPos = stage.initialize_MS2000()
     print(xyzStage)
 
     #  INITIALIZE H5 FILE
@@ -317,8 +338,15 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
             xyzStage.goAbsolute('Y', yPos, False)
 
             for ch in range(session.nWavelengths):
+
+                print(ch)
+                wave_str = list(experiment.wavelengths)[ch] #wavelength in nm as a string, e.g. '488'
+                print(wave_str)
+
                 # ch is order of wavelenghts in main
                 #   (NOT necessarily Skyra channel number)
+                # ch is an integer 0 -> X
+                # <list(experiment.wavelengths)[ch]> gives the wavelength e.g. <'488'>
                 # why do velocity settings happen twice?
                 xyzStage.setVelocity('X', 1.0)
                 xPos = session.xLength/2.0 - session.xOff
@@ -326,18 +354,18 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
                 # CHANGE FILTER
 
-                fWheel.setPosition(wheel.names_to_channels[
-                    list(experiment.wavelengths)[ch]])
+                fWheel.setPosition(wheel.names_to_channels[wave_str])
 
                 # START SCAN
 
                 skyraLaser.setModulationHighCurrent(
-                    laser.names_to_channels[list(experiment.wavelengths)[ch]],
-                    experiment.wavelengths[list(experiment.wavelengths)[ch]] /
+                    laser.names_to_channels[wave_str],
+                    experiment.wavelengths[wave_str] /
                     np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[list(experiment.wavelengths)
-                                                   [ch]])
+                           experiment.attenuations[wave_str]),
+                    False
                     )
+                
 
                 voltages, rep_time = write_voltages(daq=daq,
                                                     laser=laser,
@@ -384,8 +412,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # like cam is a frame or two ahead of code
                 while num_acquired < session.nFrames - 100:
 
-                    print('you\'ve got an image!', num_acquired, 'of', 
-                          session.nFrames, 'total')
+                    # print('you\'ve got an image!', num_acquired, 'of', 
+                    #       session.nFrames, 'total')
                     cam.wait_for_next_image(num_acquired)
 
                     if num_acquired_counter == int(session.blockSize):
@@ -558,8 +586,8 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     voltages[n2c['daq_active'], :] = 3.0
 
     # for c in range(12):
-    # 	plt.plot(voltages[c, :])
-    # 	plt.legend(loc='upper right')
+    #   plt.plot(voltages[c, :])
+    #   plt.legend(loc='upper right')
     # plt.show()
 
     # Check final voltages for sanity
@@ -579,6 +607,7 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     print('wrote voltages')
 
     return voltages, (camera.expTime/1e3-2*roll_time)*1000
+
 
 
 def zero_voltages(daq, camera):

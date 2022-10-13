@@ -7,6 +7,11 @@ Cobolt Skyra control.
 # Made max min currents a variable, but still hardcoded in set max/min. Note these values change
   with the specific laser as they are factory calibrated - KB 2022
 
+For all functions, wavelength should be specified as Skyra number:
+    1: 561
+    2: 638
+    3: 488
+    4: 405
 """
 
 # TODO Update skyra_LUT.py so that it properly generates a LUT, or add
@@ -14,6 +19,7 @@ Cobolt Skyra control.
 
 import hardware.RS232 as RS232
 import json
+from time import sleep
 from scipy import interpolate
 
 
@@ -25,15 +31,21 @@ class Skyra(RS232.RS232):
     def __init__(self, **kwds):
 
         # min and max of linear range for current control, in order by laser #
-        self.minCurrents = {1: 1180.0,
-                            2: 101.0,
-                            3: 32.0,
-                            4: 37.0}
+        self.minCurrents = {1: 1428.0,
+                            2: 108.8,
+                            3: 32.5,
+                            4: 36.4}
 
-        self.maxCurrents = {1: 2610.0,
-                            2: 169.0,
-                            3: 99.0,
-                            4: 78.0}
+        self.maxCurrents = {1: 2518.0,
+                            2: 177.1,
+                            3: 95.5,
+                            4: 77.0}
+
+        # Max powers are currently hard coded in two places, should fix this
+        self.maxPowers = {1: 50.0,
+                          2: 50.0,
+                          3: 50.0,
+                          4: 50.0}
 
         try:
             # open port
@@ -43,8 +55,8 @@ class Skyra(RS232.RS232):
             print("Failed to connect to the Cobolt Skyra!")
 
         # import LUT
-        with open('skyra_LUT.json', 'r') as read_file:
-            self.LUT = json.load(read_file)
+        # with open('skyra_LUT.json', 'r') as read_file:
+        #     self.LUT = json.load(read_file)
 
     def turnOn(self, wavelength):
         """
@@ -112,82 +124,151 @@ class Skyra(RS232.RS232):
         response = float(response[0:len(response)-5])
         return response
 
-    def setModulationHighCurrent(self, wavelength, power):
+    def setModulationHighCurrent(self, wavelength, power, use_LUT):
         """
         Set the modulation high current in mA.
         power is power in mW (note - previous version used power as fraction of max power)
         """
+        if use_LUT == True:
+            # CURRENT LUT IS FOR OXFORD OTLS - DO NOT USE LUT ON OTLS4
+            raise Exception('LUT has not been computed for OTLS4 - set use_LUT to False')
 
-        #waveMin = self.minCurrents[wavelength]
-        waveMax = self.maxCurrents[wavelength]
+            #waveMin = self.minCurrents[wavelength]
+            waveMax = self.maxCurrents[wavelength]
 
-        #current =  waveMin + power*(waveMax - waveMin)
-        current = self.power2current(wavelength,power)
+            #current =  waveMin + power*(waveMax - waveMin)
+            current = self.power2current(wavelength,power)
 
-        assert current <= waveMax
-        assert current > self.getModulationLowCurrent(wavelength)
+            assert current <= waveMax
+            assert current > self.getModulationLowCurrent(wavelength)
 
-        # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
-        if wavelength == 1:
-            assert current <= 2610.0
-        if wavelength == 2:
-            assert current <= 169.0
-        if wavelength == 3:
-            assert current <= 99.0
-        if wavelength == 4:
-            assert current <= 78.0
+            # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
+            if wavelength == 1:
+                assert current <= 2610.0
+            if wavelength == 2:
+                assert current <= 169.0
+            if wavelength == 3:
+                assert current <= 99.0
+            if wavelength == 4:
+                assert current <= 78.0
 
-        print('Setting high current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
-        assert current >= 0.0
+            print('Setting high current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
+            assert current >= 0.0
 
-        self.sendCommand(str(wavelength) + "smc " + str(current)) 
-        self.waitResponse() 
+            self.sendCommand(str(wavelength) + "smc " + str(current)) 
+            self.waitResponse() 
 
-    def setModulationLowCurrent(self, wavelength, power):
+        # ONLY USE ON OTLS 4
+        elif use_LUT == False:
+            print('***Warning - using hardcoded values for OTLS4.*** \n***Press ctrl-C if this is not OTLS4***')
+            sleep(0.0)
+            power_ratio = power/self.maxPowers[wavelength]
+            assert power_ratio <= 1.0
+            assert power_ratio >= 0.0
+
+            if wavelength == 1:
+                current = 1400.0 + power_ratio*(2630.0-1400.0)
+                assert current <= 2630.0
+                assert current > self.getModulationLowCurrent(1)
+            if wavelength == 2:
+                current = 109.0 + power_ratio*(177.0 - 109.0)
+                assert current <= 177.0
+                assert current > self.getModulationLowCurrent(2)
+            if wavelength == 3:
+                current = 32.0 + power_ratio*(96.0 - 32.0)
+                assert current <= 96.0
+                assert current > self.getModulationLowCurrent(3)
+            if wavelength == 4:
+                current = 36.0 + power_ratio*(77.0 - 36.0)
+                assert current <= 77.0
+                assert current > self.getModulationLowCurrent(4)
+
+            assert current >= 0.0
+
+            self.sendCommand(str(wavelength) + "smc " + str(current)) 
+            self.waitResponse() 
+
+        else:
+            raise Exception('use_LUT must be True or False')
+
+
+    def setModulationLowCurrent(self, wavelength, power, use_LUT):
         """
         Set the modulation low current in mA.
         Power is in mW
         """
-        current = self.power2current(wavelength,power)
+        if use_LUT == True:
+            # CURRENT LUT IS FOR OXFORD OTLS - DO NOT USE LUT ON OTLS4
+            raise Exception('LUT has not been computed for OTLS4 - set use_LUT to False')
 
-        # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
-        if wavelength == 1:
-            assert current <= 2610.0
-            assert current < self.getModulationHighCurrent(1)
-        if wavelength == 2:
-            assert current <= 169.0
-            assert current < self.getModulationHighCurrent(2)
-        if wavelength == 3:
-            assert current <= 99.0
-            assert current < self.getModulationHighCurrent(3)
-        if wavelength == 4:
-            assert current <= 78.0
-            assert current < self.getModulationHighCurrent(4)
+            current = self.power2current(wavelength,power)
 
-        ''' old
-        if wavelength == 1:
-            current = 780.0 + power*(self.maxCurrents[0]-780.0)
-            assert current <= 2610.0
-            assert current < self.getModulationHighCurrent(1)
-        if wavelength == 2:
-            current = 0.0 + power*(self.maxCurrents[1])
-            assert current <= 169.0
-            assert current < self.getModulationHighCurrent(1)
-        if wavelength == 3:
-            current = 0.0 + power*(self.maxCurrents[2])
-            assert current <= 99.0
-            assert current < self.getModulationHighCurrent(1)
-        if wavelength == 4:
-            current = 0.0 + power*(self.maxCurrents[3])
-            assert current <= 78.0
-            assert current < self.getModulationHighCurrent(1)'''
+            # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
+            if wavelength == 1:
+                assert current <= 2610.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 2:
+                assert current <= 169.0
+                assert current < self.getModulationHighCurrent(2)
+            if wavelength == 3:
+                assert current <= 99.0
+                assert current < self.getModulationHighCurrent(3)
+            if wavelength == 4:
+                assert current <= 78.0
+                assert current < self.getModulationHighCurrent(4)
 
-        print('Setting low current for wavelength ' + str(wavelength) + \
-            ' to ' + str(current) + 'mA')
-        assert current >= 0.0
+            ''' old
+            if wavelength == 1:
+                current = 780.0 + power*(self.maxCurrents[0]-780.0)
+                assert current <= 2610.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 2:
+                current = 0.0 + power*(self.maxCurrents[1])
+                assert current <= 169.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 3:
+                current = 0.0 + power*(self.maxCurrents[2])
+                assert current <= 99.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 4:
+                current = 0.0 + power*(self.maxCurrents[3])
+                assert current <= 78.0
+                assert current < self.getModulationHighCurrent(1)'''
 
-        self.sendCommand(str(wavelength) + "slth " + str(current))  
-        self.waitResponse() 
+            print('Setting low current for wavelength ' + str(wavelength) + \
+                ' to ' + str(current) + 'mA')
+            assert current >= 0.0
+
+            self.sendCommand(str(wavelength) + "slth " + str(current))  
+            self.waitResponse()
+
+        elif use_LUT == False:
+            print('***Warning - using hardcoded values for OTLS4.*** \n***Press ctrl-C if this is not OTLS4***')
+            sleep(0.0)
+            if wavelength == 1:
+                current = 780.0 + power*(2630.0-780.0)
+                assert current <= 2630.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 2:
+                current = 0.0 + power*(177.0)
+                assert current <= 177.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 3:
+                current = 0.0 + power*(96.0)
+                assert current <= 96.0
+                assert current < self.getModulationHighCurrent(1)
+            if wavelength == 4:
+                current = 0.0 + power*(77.0)
+                assert current <= 77.0
+                assert current < self.getModulationHighCurrent(1)
+
+            assert current >= 0.0
+
+            self.sendCommand(str(wavelength) + "slth " + str(current))  
+            self.waitResponse() 
+
+        else: 
+            raise Exception('use_LUT must be True or False')
 
     def power2current(self, wavelength, power):
         """
