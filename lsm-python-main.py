@@ -54,7 +54,10 @@ experiment_dict['zMin'] = 0.0  # mm
 experiment_dict['zMax'] = 0.2  # mm
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'561': 1.0}
+experiment_dict['wavelengths'] = {'405': 1.0,
+                                  '488': 1.0,
+                                  '561': 1.0,
+                                  '638': 1.0}
 
 
 experiment_dict['attenuations'] = {'405': 1.4,
@@ -63,36 +66,50 @@ experiment_dict['attenuations'] = {'405': 1.4,
                                    '638': 1.4}
 
 
-# all daq amplitudes are in Volts
-daq_dict['xamplitude'] = {'405': 0.3000,
-                          '488': 0.3000,
-                          '561': 0.3000,
-                          '638': 0.3000}
+# NEW: set DAQ parameters to match DAQExpress (values in volts)
+# Only ymax and econst should be adjusted for each sample. Remaining
+# parameters should not be changed, but you should confirm they
+# match those in DAQExpress
 
-daq_dict['xoffset'] = {'405': 1.1825,
-                       '488': 1.1825,
-                       '561': 1.1825,
-                       '638': 1.1825}
+# X Galvo
+daq_dict['xmin'] = {'405': 0.0000,
+                    '488': 0.0000,
+                    '561': 0.0000,
+                    '638': 0.0000}
 
-daq_dict['yamplitude'] = {'405': 0.0200,
-                          '488': 0.0200,
-                          '561': 0.0200,
-                          '638': 0.0200}
+daq_dict['xmax'] = {'405': 2.3650,
+                    '488': 2.3650,
+                    '561': 2.3650,
+                    '638': 2.3650}
 
-daq_dict['yoffset'] = {'405': 0.0625,
-                       '488': 0.0650,
-                       '561': 0.0680,
-                       '638': 0.0675}
+daq_dict['xpp'] = {'405': 0.6000,
+                   '488': 0.6000,
+                   '561': 0.6000,
+                   '638': 0.6000}
 
-daq_dict['eamplitude'] = {'405': 0.0000,
-                          '488': 0.0000,
-                          '561': 0.0000,
-                          '638': 0.0000}
+# Y Galvo
+daq_dict['ymin'] = {'405': -2.000,
+                    '488': -2.000,
+                    '561': -2.000,
+                    '638': -2.000}
 
-daq_dict['eoffset'] = {'405': 2.6300,
-                       '488': 2.5000,
-                       '561': 2.5100,
-                       '638': 2.5100}
+# >>>>>>>  Adjust ymax  <<<<<<<
+daq_dict['ymax'] = {'405': 2.1250,
+                    '488': 2.1300,
+                    '561': 2.1360,
+                    '638': 2.1350}
+
+daq_dict['ypp'] = {'405': 0.0400,
+                   '488': 0.0400,
+                   '561': 0.0400,
+                   '638': 0.0400}
+
+# ETL
+# >>>>>>>  Adjust econst  <<<<<<<
+daq_dict['econst'] = {'405': 2.6300,
+                      '488': 2.5000,
+                      '561': 2.5100,
+                      '638': 2.5100}
 
 # compute remaining parameters
 camera_dict['sampling'] = um_per_px
@@ -116,6 +133,5 @@ stageObj = lsmfx.stage(stage_dict)
 print('potato')
 
 # Begin scanning
-
 lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
              stageObj)

@@ -140,12 +140,14 @@ class daq(object):
         # self.name = daq_dict['name']
         self.num_channels = daq_dict['num_channels']
         self.names_to_channels = daq_dict['names_to_channels']
-        self.xamplitude = daq_dict['xamplitude']
-        self.xoffset = daq_dict['xoffset']
-        self.yamplitude = daq_dict['yamplitude']
-        self.yoffset = daq_dict['yoffset']
-        self.eamplitude = daq_dict['eamplitude']
-        self.eoffset = daq_dict['eoffset']
+
+        self.xmin = daq_dict['xmin']
+        self.xmax = daq_dict['xmax']
+        self.xpp = daq_dict['xpp']
+        self.ymin = daq_dict['ymin']
+        self.ymax = daq_dict['ymax']
+        self.ypp = daq_dict['ypp']
+        self.econst = daq_dict['econst']
 
         print(daq_dict)
 
@@ -468,10 +470,23 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     xyzStage.shutDown()
 
 
-def write_voltages(daq, laser, camera, experiment, scan, ch):
+def write_voltages(daq,
+                   laser,
+                   camera,
+                   experiment,
+                   ch):
 
     print('writing voltages')
     n2c = daq.names_to_channels
+    wave_key = list(experiment.wavelengths)[ch]  # wavelength as a string
+
+    # convert max / min / peak-to-peak (DAQExpress convention)
+    # to offset / amplitude
+    xoffset = (daq.xmax[wave_key] + daq.xmin[wave_key]) / 2
+    xamplitude = daq.xpp[wave_key] / 2
+    yoffset = (daq.ymax[wave_key] + daq.ymin[wave_key]) / 2
+    yamplitude = daq.ypp[wave_key] / 2
+    eoffset = daq.econst[wave_key]
 
     samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
 
@@ -493,18 +508,15 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     # X Galvo scanning:
     period_samples = np.linspace(0,
                                  2 * math.pi, on_samples + 2 * buffer_samples)
-    snap_back = np.linspace(daq.xoffset[list(experiment.wavelengths)[ch]] +
-                            daq.xamplitude[list(experiment.wavelengths)[ch]],
-                            daq.xoffset[list(experiment.wavelengths)[ch]] -
-                            daq.xamplitude[list(experiment.wavelengths)[ch]],
+    snap_back = np.linspace(xoffset + xamplitude,
+                            xoffset - xamplitude,
                             samples - on_samples - 2 * buffer_samples)
-    voltages[n2c['xgalvo'], :] = daq.xoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['xgalvo'], :] = xoffset
     voltages[n2c['xgalvo'],
              roll_samples - galvo_samples - buffer_samples:
              roll_samples + on_samples - galvo_samples + buffer_samples] = \
-        -2 * (daq.xamplitude[list(experiment.wavelengths)[ch]] / math.pi) * \
-        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + \
-        daq.xoffset[list(experiment.wavelengths)[ch]]
+        -2 * (xamplitude / math.pi) * \
+        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + xoffset
     voltages[n2c['xgalvo'],
              roll_samples + on_samples - galvo_samples + buffer_samples:
              samples] = \
@@ -518,18 +530,15 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     # Y Galvo scanning:
     period_samples = np.linspace(0,
                                  2 * math.pi, on_samples + 2 * buffer_samples)
-    snap_back = np.linspace(daq.yoffset[list(experiment.wavelengths)[ch]] +
-                            daq.yamplitude[list(experiment.wavelengths)[ch]],
-                            daq.yoffset[list(experiment.wavelengths)[ch]] -
-                            daq.yamplitude[list(experiment.wavelengths)[ch]],
+    snap_back = np.linspace(yoffset + yamplitude,
+                            yoffset - yamplitude,
                             samples - on_samples - 2 * buffer_samples)
-    voltages[n2c['ygalvo'], :] = daq.yoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['ygalvo'], :] = yoffset
     voltages[n2c['ygalvo'],
              roll_samples - galvo_samples - buffer_samples:
              roll_samples + on_samples-galvo_samples + buffer_samples] = \
-        -2 * (daq.yamplitude[list(experiment.wavelengths)[ch]] / math.pi) * \
-        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + \
-        daq.yoffset[list(experiment.wavelengths)[ch]]
+        -2 * (yamplitude / math.pi) * \
+        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + yoffset
     voltages[n2c['ygalvo'],
              roll_samples + on_samples - galvo_samples + buffer_samples:
              samples] = \
@@ -542,17 +551,17 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
 
     # Laser modulation:
     if laser.strobing == 'ON':
-        voltages[n2c[list(experiment.wavelengths)[ch]],
+        voltages[n2c[wave_key],
                  roll_samples + 50:roll_samples + on_samples - 50] = 5.0
-        voltages[n2c[list(experiment.wavelengths)[ch]], 0] = 0.0
-        voltages[n2c[list(experiment.wavelengths)[ch]], -1] = 0.0
+        voltages[n2c[wave_key], 0] = 0.0
+        voltages[n2c[wave_key], -1] = 0.0
     elif laser.strobing == 'OFF':
-        voltages[n2c[list(experiment.wavelengths)[ch]], :] = 5.0
+        voltages[n2c[wave_key], :] = 5.0
     else:
         raise Exception('laser.strobing invalid, must be \'ON\' or \'OFF\'')
 
     # ETL scanning:
-    voltages[n2c['etl'], :] = daq.eoffset[list(experiment.wavelengths)[ch]]
+    voltages[n2c['etl'], :] = eoffset
 
     # NI playing:
     voltages[n2c['daq_active'], :] = 3.0
@@ -573,8 +582,8 @@ def write_voltages(daq, laser, camera, experiment, scan, ch):
     assert np.min(voltages[n2c['etl'], :]) >= 0.0
     assert np.max(voltages[n2c['daq_active'], :]) <= 5.0
     assert np.min(voltages[n2c['daq_active'], :]) >= 0.0
-    assert np.max(voltages[n2c[list(experiment.wavelengths)[ch]], :]) <= 5.0
-    assert np.min(voltages[n2c[list(experiment.wavelengths)[ch]], :]) >= 0.0
+    assert np.max(voltages[n2c[wave_key], :]) <= 5.0
+    assert np.min(voltages[n2c[wave_key], :]) >= 0.0
 
     print('wrote voltages')
 
