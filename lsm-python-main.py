@@ -1,27 +1,5 @@
-#!/usr/bin/python
-
 import lsmfx
 import json
-
-'''
-I don't think we need these
-from lsmfx import experiment
-from lsmfx import camera
-from lsmfx import daq
-from lsmfx import laser
-from lsmfx import wheel
-from lsmfx import etl
-from lsmfx import stage
-'''
-
-# Code stucture:
-# import dicts from static params
-# set user-defined paramters
-# compute any remaining paramters
-# pass dicts to class constructors
-# pass objects to scan3D
-
-um_per_px = 0.3846  # microns        0.43 for water, 0.3846 for ECi
 
 # import static parameters
 with open('static_params.json', 'r') as read_file:
@@ -35,15 +13,24 @@ wheel_dict = static_params['wheel']
 etl_dict = static_params['etl']
 stage_dict = static_params['stage']
 
-# Set user-defined paramters
+
+# ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
 camera_dict['expTime'] = 10.0  # ms
-camera_dict['quantSigma'] = {'405': 0.0, '488': 0.0, '561': 0.0, '638': 0.0}
+
+# B3D compression. 0.0 = off, 1.0 = standard compression
+camera_dict['quantSigma'] = {'405': 0.0,
+                             '488': 0.0,
+                             '561': 0.0,
+                             '638': 0.0}
+
+# pixel sampling: ~0.43 for water, 0.3846 for ECi
+um_per_px = 0.3846  # microns
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = 'code_testing'  # specimen names
+experiment_dict['fname'] = 'code_testing'  # file name
 
 # ROI PARAMETERS
 experiment_dict['xMin'] = 0.5  # mm
@@ -111,7 +98,8 @@ daq_dict['econst'] = {'405': 2.6300,
                       '561': 2.5100,
                       '638': 2.5100}
 
-# compute remaining parameters
+
+# ------ Automatically compute remaining parameters  ------ #
 camera_dict['sampling'] = um_per_px
 
 experiment_dict['xWidth'] = um_per_px  # um
