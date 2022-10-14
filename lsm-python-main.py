@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-#New code adapter for OTLS 4 NODO
+#New code adapted for OTLS 4 NODO
+# THIS WORKS AS OF 10-14-22
+# Eventually need to incorporate changes here
+# (inclusion of a no LUT option for laser) into main repo
 
 import lsmfx
 import json
@@ -40,21 +43,21 @@ stage_dict = static_params['stage']
 # Set user-defined paramters
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 5.0  # ms
+camera_dict['expTime'] = 47.0  # ms
 camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'Nanostring_BM-uncleared-sybr-gold_1mW-5ms-2'  # specimen names
+experiment_dict['fname'] = 'code_test'  # specimen names
 
 # ROI PARAMETERS
 
-experiment_dict['xMin'] = -2.41  # mm
-experiment_dict['xMax'] = -2.21  # mm
-experiment_dict['yMin'] = 7.56  # mm
-experiment_dict['yMax'] = 8.02  # mm
-experiment_dict['zMin'] = -8.67  # mm
-experiment_dict['zMax'] = -8.59  # mm
+experiment_dict['xMin'] = 3.9  # mm
+experiment_dict['xMax'] = 4.4  # mm
+experiment_dict['yMin'] = -1.2  # mm
+experiment_dict['yMax'] = 0.0  # mm
+experiment_dict['zMin'] = -0.087  # mm
+experiment_dict['zMax'] = 0.1  # mm
 
 '''
 experiment_dict['xMin'] = -2.41  # mm
@@ -66,8 +69,10 @@ experiment_dict['zMax'] = -8.59  # mm
 '''
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'488': 5.0}
-
+experiment_dict['wavelengths'] = {'405': 10.0,
+                                  '488': 10.0,
+                                  '561': 10.0,
+                                  '638': 10.0}
 
 experiment_dict['attenuations'] = {'405': 1.4,
                                    '488': 1.4,

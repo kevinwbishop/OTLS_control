@@ -36,7 +36,7 @@ class Skyra(RS232.RS232):
                             3: 32.5,
                             4: 36.4}
 
-        self.maxCurrents = {1: 2518.0,
+        self.maxCurrents = {1: 2499.0,
                             2: 177.1,
                             3: 95.5,
                             4: 77.0}
