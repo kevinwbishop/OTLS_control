@@ -13,7 +13,8 @@ import h5py
 import os.path
 import skimage.transform
 import pco
-import hardware.tiger as tiger
+#import hardware.tiger as tiger
+import hardware.ms2000 as ms2000
 import hardware.ni as ni
 import hardware.fw102c as fw102c
 import hardware.skyra as skyra
@@ -211,15 +212,22 @@ class stage(object):
     def initialize(self):
 
         print('initializing stage')
-        xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
+        xyzStage = ms2000.MS2000(baudrate=self.rate, port=self.port)
         initialPos = xyzStage.getPosition()
-        xyzStage.setPLCPreset(6, 52)  # new command for Tiger
+        #xyzStage.setPLCPreset(6, 52)  # new command for Tiger
+
+        xyzStage.setTTL("Y",3)
         xyzStage.setScanF(1)
-        for ax in self.axes:
-            print(ax)
-            xyzStage.setBacklash(ax, self.settings['backlash'])
-            xyzStage.setVelocity(ax, self.settings['velocity'])
-            xyzStage.setAcceleration(ax, self.settings['acceleration'])
+        xyzStage.setBacklash("X",0)
+        xyzStage.setBacklash("Y",0)
+        xyzStage.setBacklash("Z",0)
+        xyzStage.setVelocity("X", 1.0)
+        xyzStage.setVelocity("Y", 1.0)
+        xyzStage.setVelocity("Z", 0.1)
+        xyzStage.setAcceleration("X",100)
+        xyzStage.setAcceleration("Y",100)
+        xyzStage.setAcceleration("Z",100)
+
         print('stage initialized', initialPos)
         return xyzStage, initialPos
 
@@ -345,7 +353,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                                     laser=laser,
                                                     camera=camera,
                                                     experiment=experiment,
-                                                    scan=session,
+                                                    #scan=session,
                                                     ch=ch)
 
                 waveformGenerator.ao_task.write(voltages)

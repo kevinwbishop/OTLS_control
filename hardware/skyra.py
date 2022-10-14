@@ -129,13 +129,13 @@ class Skyra(RS232.RS232):
 
         # These max values are intentionally hardcoded in two places for redundancy, they must be changed here and in init
         if wavelength == 1:
-            assert current <= 2610.0
+            assert current <= 2630.0
         if wavelength == 2:
-            assert current <= 169.0
+            assert current <= 177.0
         if wavelength == 3:
-            assert current <= 99.0
+            assert current <= 96.0
         if wavelength == 4:
-            assert current <= 78.0
+            assert current <= 77.0
 
         print('Setting high current for wavelength ' + str(wavelength) + ' to ' + str(current) + 'mA')
         assert current >= 0.0
