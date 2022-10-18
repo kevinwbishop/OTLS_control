@@ -149,8 +149,6 @@ class daq(object):
         self.ypp = daq_dict['ypp']
         self.econst = daq_dict['econst']
 
-        print(daq_dict)
-
 
 class laser(object):
     def __init__(self,
@@ -216,7 +214,6 @@ class stage(object):
         xyzStage.setPLCPreset(6, 52)  # new command for Tiger
         xyzStage.setScanF(1)
         for ax in self.axes:
-            print(ax)
             xyzStage.setBacklash(ax, self.settings['backlash'])
             xyzStage.setVelocity(ax, self.settings['velocity'])
             xyzStage.setAcceleration(ax, self.settings['acceleration'])
@@ -234,7 +231,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     session = scan(experiment, camera)
 
     print('made session')
-    print(experiment.xMax - experiment.xMin, session.xLength)
     # SETUP DATA DIRECTORY
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
@@ -345,7 +341,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                                     laser=laser,
                                                     camera=camera,
                                                     experiment=experiment,
-                                                    scan=session,
+                                                    #scan=session,
                                                     ch=ch)
 
                 waveformGenerator.ao_task.write(voltages)
