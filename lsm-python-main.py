@@ -43,21 +43,21 @@ stage_dict = static_params['stage']
 # Set user-defined paramters
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 47.0  # ms
+camera_dict['expTime'] = 200.0  # ms
 camera_dict['quantSigma'] = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'code_test'  # specimen names
+experiment_dict['fname'] = 'Nanostring_cleared_mb_5um_RNA'  # specimen names
 
 # ROI PARAMETERS
 
-experiment_dict['xMin'] = 3.9  # mm
-experiment_dict['xMax'] = 4.4  # mm
-experiment_dict['yMin'] = -1.2  # mm
-experiment_dict['yMax'] = 0.0  # mm
-experiment_dict['zMin'] = -0.087  # mm
-experiment_dict['zMax'] = 0.1  # mm
+experiment_dict['xMin'] = 0.0  # mm
+experiment_dict['xMax'] = 2.0  # mm
+experiment_dict['yMin'] = 0.0  # mm
+experiment_dict['yMax'] = 0.92  # mm
+experiment_dict['zMin'] = 0.1435  # mm
+experiment_dict['zMax'] = 0.17  # mm
 
 '''
 experiment_dict['xMin'] = -2.41  # mm
@@ -70,9 +70,9 @@ experiment_dict['zMax'] = -8.59  # mm
 
 # set experiment wavelenths here, power in mW
 experiment_dict['wavelengths'] = {'405': 10.0,
-                                  '488': 10.0,
-                                  '561': 10.0,
-                                  '638': 10.0}
+                                  '488': 50.0,
+                                  '561': 50.0,
+                                  '638': 50.0}
 
 experiment_dict['attenuations'] = {'405': 1.4,
                                    '488': 1.4,
@@ -97,9 +97,9 @@ daq_dict['yamplitude'] = {'405': 0.00325,
                           '638': 0.00325}
 
 daq_dict['yoffset'] = {'405': 0.0875,
-                       '488': 0.0890,
-                       '561': 0.0875,
-                       '638': 0.0875}
+                       '488': 0.0925,
+                       '561': 0.09,
+                       '638': 0.09}
 
 daq_dict['eamplitude'] = {'405': 0.0000,
                           '488': 0.0000,
@@ -107,8 +107,8 @@ daq_dict['eamplitude'] = {'405': 0.0000,
                           '638': 0.0000}
 
 daq_dict['eoffset'] = {'405': 2.6300,
-                       '488': 2.5000,
-                       '561': 2.5850,
+                       '488': 2.51000,
+                       '561': 2.520,
                        '638': 2.5200}
 
 # compute remaining parameters
