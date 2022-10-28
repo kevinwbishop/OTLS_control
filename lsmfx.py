@@ -158,12 +158,36 @@ class laser(object):
         self.rate = laser_dict['rate']
         self.names_to_channels = laser_dict['names_to_channels']
         self.max_powers = laser_dict['max_powers']
+        self.skyra_system_name = laser_dict['skyra_system_name']
+        self.use_LUT = laser_dict['use_LUT']
+        self.min_currents = laser_dict['min_currents']
+        self.max_currents = laser_dict['max_currents']
         self.strobing = laser_dict['strobing']
 
     def initialize(self, experiment):
 
         print('initializing laser')
-        skyraLaser = skyra.Skyra(baudrate=self.rate, port=self.port)
+        print('using laser parameters use_LUT=' + self.use_LUT +
+              ' system_name=' + self.skyra_system_name)
+        input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
+              ' to the laser. If this correct, press Enter to continue.')
+
+        min_currents_sk_num = {1: self.min_currents(self.names_to_channels[1]),
+                               2: self.min_currents(self.names_to_channels[2]),
+                               3: self.min_currents(self.names_to_channels[3]),
+                               4: self.min_currents(self.names_to_channels[4])}
+
+        max_currents_sk_num = {1: self.max_currents(self.names_to_channels[1]),
+                               2: self.max_currents(self.names_to_channels[2]),
+                               3: self.max_currents(self.names_to_channels[3]),
+                               4: self.max_currents(self.names_to_channels[4])}
+
+        skyraLaser = skyra.Skyra(baudrate=self.rate,
+                                 port=self.port,
+                                 use_LUT=self.use_LUT,
+                                 min_currents=min_currents_sk_num,
+                                 max_currents=max_currents_sk_num)
+                                 
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])
             skyraLaser.setDigitalModulation(self.names_to_channels[ch], 1)
