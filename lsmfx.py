@@ -1,3 +1,6 @@
+# added functionality for OTLS 4 (MS2000, no_LUT laser)
+# need to test on Oxford (current params) and OTLS4 (change params)
+
 #!/usr/bin/python
 """
 LSM scanning code
