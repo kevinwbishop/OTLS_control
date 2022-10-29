@@ -41,8 +41,10 @@ class Skyra(RS232.RS232):
             print("Failed to connect to the Cobolt Skyra!")
 
         # import LUT
-        with open('skyra_LUT.json', 'r') as read_file:
-            self.LUT = json.load(read_file)
+        if self.use_LUT:
+            print('importing Skyra LUT')
+            with open('skyra_LUT.json', 'r') as read_file:
+                self.LUT = json.load(read_file)
 
     def turnOn(self, wavelength):
         """
@@ -154,22 +156,41 @@ class Skyra(RS232.RS232):
         converts power in mW to current in mA using LUT for a given wavelength
         """
 
-        min_interp = self.LUT['ch' + str(wavelength)]['power'][0]
-        max_interp = self.LUT['ch' + str(wavelength)]['power'][-1]
+        if self.use_LUT is True:
+            print('Setting power via LUT')
+            min_interp = self.LUT['ch' + str(wavelength)]['power'][0]
+            max_interp = self.LUT['ch' + str(wavelength)]['power'][-1]
 
-        set_power = power / \
-            self.LUT['ch' + str(wavelength)]['measurement_factor']
+            set_power = power / \
+                self.LUT['ch' + str(wavelength)]['measurement_factor']
 
-        if set_power == 0:
-            current = self.LUT['ch' + str(wavelength)]['zero_current']
-        elif set_power >= min_interp and set_power <= max_interp:
-            interp_func = interpolate.interp1d(
-                self.LUT['ch' + str(wavelength)]['power'],
-                self.LUT['ch' + str(wavelength)]['current'])
-            current = interp_func(set_power).item()
+            if set_power == 0:
+                current = self.LUT['ch' + str(wavelength)]['zero_current']
+            elif set_power >= min_interp and set_power <= max_interp:
+                interp_func = interpolate.interp1d(
+                    self.LUT['ch' + str(wavelength)]['power'],
+                    self.LUT['ch' + str(wavelength)]['current'])
+                current = interp_func(set_power).item()
+            else:
+                raise Exception('Specified power out of range')
+            return current
+
+        elif self.use_LUT is False:
+            print('Setting power via linear interpolation')
+            power_ratio = power/self.maxPowers[wavelength]
+
+            assert power_ratio <= 1.0
+            assert power_ratio >= 0.0
+
+            waveMin = self.minCurrents[wavelength]
+            waveMax = self.maxCurrents[wavelength]
+            current = waveMin + power_ratio * (waveMax - waveMin)
+
+            assert current >= 0.0
+            assert current <= self.maxCurrents[wavelength]
+
         else:
-            raise Exception('Specified power out of range')
-        return current
+            raise Exception('use_LUT must be True or False')
 
 
 if (__name__ == "__main__"):

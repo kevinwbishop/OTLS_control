@@ -187,7 +187,7 @@ class laser(object):
                                  use_LUT=self.use_LUT,
                                  min_currents=min_currents_sk_num,
                                  max_currents=max_currents_sk_num)
-                                 
+
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])
             skyraLaser.setDigitalModulation(self.names_to_channels[ch], 1)
@@ -339,26 +339,29 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
             xyzStage.goAbsolute('Y', yPos, False)
 
             for ch in range(session.nWavelengths):
-                # ch is order of wavelenghts in main
+
+                print(ch)
+                wave_str = list(experiment.wavelengths)[ch] #wavelength in nm as a string, e.g. '488'
+                print(wave_str)
+
+                # ch is order of wavelenghts in main (an integer 0 -> X)
                 #   (NOT necessarily Skyra channel number)
-                # why do velocity settings happen twice?
+
                 xyzStage.setVelocity('X', 1.0)
                 xPos = session.xLength/2.0 - session.xOff
                 xyzStage.goAbsolute('X', -xPos, False)
 
                 # CHANGE FILTER
 
-                fWheel.setPosition(wheel.names_to_channels[
-                    list(experiment.wavelengths)[ch]])
+                fWheel.setPosition(wheel.names_to_channels[wave_str])
 
                 # START SCAN
 
                 skyraLaser.setModulationHighCurrent(
-                    laser.names_to_channels[list(experiment.wavelengths)[ch]],
-                    experiment.wavelengths[list(experiment.wavelengths)[ch]] /
+                    laser.names_to_channels[wave_str],
+                    experiment.wavelengths[wave_str] /
                     np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[list(experiment.wavelengths)
-                                                   [ch]])
+                           experiment.attenuations[wave_str])
                     )
 
                 voltages, rep_time = write_voltages(daq=daq,
