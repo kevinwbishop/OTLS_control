@@ -13,7 +13,7 @@ import h5py
 import os.path
 import skimage.transform
 import pco
-import hardware.tiger as tiger
+# Tiger or MS2000 are imported below based on stage model param
 import hardware.ni as ni
 import hardware.fw102c as fw102c
 import hardware.skyra as skyra
@@ -224,6 +224,10 @@ class stage(object):
                  stage_dict):
         self.port = stage_dict['port']
         self.rate = stage_dict['rate']
+        self.model = stage_dict['model']
+
+        # Should check the velocity and acceration, I think this really shouldn't
+        # be part of the init since it's set to different values in various places
         self.settings = {'backlash': 0.0,
                          'velocity': 1.0,
                          'acceleration': 100
@@ -232,10 +236,22 @@ class stage(object):
 
     def initialize(self):
 
-        print('initializing stage')
-        xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
+        if self.model == 'tiger':
+            print('initializing stage: Tiger')
+            import hardware.tiger as tiger
+            xyzStage = tiger.TIGER(baudrate=self.rate, port=self.port)
+            xyzStage.setPLCPreset(6, 52)
+
+        elif self.model == 'ms2000':
+            print('initializing stage: MS2000')
+            import hardware.ms2000 as ms2000
+            xyzStage = ms2000.MS2000(baudrate=self.rate, port=self.port)
+            xyzStage.setTTL('Y',3)
+
+        else:
+            raise Exception('invalid stage type!')
+
         initialPos = xyzStage.getPosition()
-        xyzStage.setPLCPreset(6, 52)  # new command for Tiger
         xyzStage.setScanF(1)
         for ax in self.axes:
             xyzStage.setBacklash(ax, self.settings['backlash'])

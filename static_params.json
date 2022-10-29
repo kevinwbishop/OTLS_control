@@ -78,6 +78,7 @@
         "port": "COM6"
     },
     "stage": {
+        "model": "tiger",
         "port": "COM4",
         "rate": 115200
     }

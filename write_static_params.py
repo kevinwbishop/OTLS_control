@@ -81,6 +81,7 @@ static_params_write = {
         'port': 'COM6'  # this might not actually be used
     },
     'stage': {
+        'model': 'tiger', # must be 'tiger' or 'ms2000'
         'port': 'COM4',
         'rate': 115200
     }
