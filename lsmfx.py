@@ -129,6 +129,7 @@ class camera(object):
         self.acquireMode = camera_dict['acquireMode']
         self.shutterMode = camera_dict['shutterMode']
         self.compressionMode = camera_dict['compressionMode']
+        self.B3Denv = camera_dict['B3Denv']
         self.quantSigma = camera_dict['quantSigma']
 
 
@@ -709,14 +710,15 @@ def h5init(dest, camera, scan, experiment):
                                                                           )
                                                                           )
                     else:
-                        if (os.environ['CONDA_DEFAULT_ENV'] != 'image'):
-
+                        if ((camera.B3Denv != '') and
+                            (camera.B3Denv != os.environ['CONDA_DEFAULT_ENV'])
+                            ):
                             print('Warning: B3D is active but the ' +
                                   'current conda environment is: ' +
                                   os.environ['CONDA_DEFAULT_ENV'])
                             print('Press CTRL + C to exit and run \'conda' +
-                                  ' activate image\' before running ' +
-                                  'lsm-python-main.py')
+                                  ' activate ' + camera.B3Denv + '\' before ' +
+                                  'running lsm-python-main.py')
                             input('Press Enter to override this warning' +
                                   ' and continue anyways')
 

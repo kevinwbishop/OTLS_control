@@ -8,7 +8,9 @@ static_params_write = {
         'shutterMode': 'top middle bottom middle',
         'triggerMode': 'auto sequence',
         'acquireMode': 'external',
-        'compressionMode': 1
+        'compressionMode': 1,
+        'B3Denv': 'image'  # name of required conda env when B3D is active.
+                           # leave as empty string to allow any env.
     },
     'experiment': {
         'overlap': 30,  # number of px overlap in Y and Z between tiles

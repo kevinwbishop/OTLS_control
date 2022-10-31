@@ -6,7 +6,8 @@
         "shutterMode": "top middle bottom middle",
         "triggerMode": "auto sequence",
         "acquireMode": "external",
-        "compressionMode": 1
+        "compressionMode": 1,
+        "B3Denv": "image"
     },
     "experiment": {
         "overlap": 30,
