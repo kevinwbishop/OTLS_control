@@ -80,7 +80,7 @@ class Skyra(RS232.RS232):
         """
         # import LUT
         if self.use_LUT:
-            print('importing Skyra LUT')
+            print('Importing Skyra LUT')
             with open('skyra_LUT.json', 'r') as read_file:
                 self.LUT = json.load(read_file)
 
@@ -169,7 +169,7 @@ class Skyra(RS232.RS232):
         print('Setting high current for wavelength ' + str(wavelength) +
               ' to ' + str(current) + 'mA')
 
-        #self.sendCommand(str(wavelength) + "smc " + str(current))
+        self.sendCommand(str(wavelength) + "smc " + str(current))
         self.waitResponse()
 
     def setModulationLowCurrent(self, wavelength, power):
@@ -186,7 +186,7 @@ class Skyra(RS232.RS232):
         print('Setting low current for wavelength ' + str(wavelength) +
               ' to ' + str(current) + 'mA')
 
-        #self.sendCommand(str(wavelength) + "slth " + str(current))
+        self.sendCommand(str(wavelength) + "slth " + str(current))
         self.waitResponse()
 
     def power2current(self, wavelength, power):

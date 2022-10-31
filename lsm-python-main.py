@@ -41,10 +41,7 @@ experiment_dict['zMin'] = 0.0  # mm
 experiment_dict['zMax'] = 0.2  # mm
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'405': 1.0,
-                                  '488': 1.0,
-                                  '561': 1.0,
-                                  '638': 1.0}
+experiment_dict['wavelengths'] = {'638': 1.0}
 
 
 experiment_dict['attenuations'] = {'405': 1.4,

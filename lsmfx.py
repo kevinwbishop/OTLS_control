@@ -1,7 +1,5 @@
-# added functionality for OTLS 4 (MS2000, no_LUT laser)
-# need to test on Oxford (current params) and OTLS4 (change params)
-
 #!/usr/bin/python
+
 """
 LSM scanning code
 
@@ -83,10 +81,10 @@ class scan(object):
     def __init__(self, experiment, camera):
 
         self.xLength = experiment.xMax - experiment.xMin  # mm
-        self.yLength = round(
-                (experiment.yMax - experiment.yMin)/experiment.yWidth)*experiment.yWidth  # mm
-        self.zLength = round(
-                (experiment.zMax - experiment.zMin)/experiment.zWidth)*experiment.zWidth  # mm
+        self.yLength = round((experiment.yMax - experiment.yMin) /
+                             experiment.yWidth) * experiment.yWidth  # mm
+        self.zLength = round((experiment.zMax - experiment.zMin) /
+                             experiment.zWidth) * experiment.zWidth  # mm
         self.xOff = experiment.xMax - self.xLength/2
         self.yOff = experiment.yMax - self.yLength/2
         self.zOff = experiment.zMin
@@ -167,7 +165,7 @@ class laser(object):
         self.max_currents = laser_dict['max_currents']
         self.strobing = laser_dict['strobing']
 
-    def initialize(self, experiment):
+    def initialize(self, experiment, scan):
 
         print('initializing laser')
         print('using laser parameters use_LUT=' + str(self.use_LUT) +
@@ -178,31 +176,14 @@ class laser(object):
         min_currents_sk_num = {}
         max_currents_sk_num = {}
 
-        for ch in experiment.wavelengths:  #ch is wavelength as a string
-            #self.names_to_channels[ch]
+        for ch in experiment.wavelengths:  # ch is wavelength as a string
             min_currents_sk_num[self.names_to_channels[ch]] = \
                 self.min_currents[ch]
             max_currents_sk_num[self.names_to_channels[ch]] = \
                 self.max_currents[ch]
 
-        '''        
-        form of these vars (key is an int)
-        min_currents_sk_num = {1: self.min_currents(self.names_to_channels[1]),
-                               2: self.min_currents(self.names_to_channels[2]),
-                               3: self.min_currents(self.names_to_channels[3]),
-                               4: self.min_currents(self.names_to_channels[4])}
-
-        max_currents_sk_num = {1: self.max_currents(self.names_to_channels[1]),
-                               2: self.max_currents(self.names_to_channels[2]),
-                               3: self.max_currents(self.names_to_channels[3]),
-                               4: self.max_currents(self.names_to_channels[4])}
-        '''
         skyraLaser = skyra.Skyra(baudrate=self.rate,
-                                 port=self.port,
-                                #  use_LUT=self.use_LUT,
-                                #  min_currents=min_currents_sk_num,
-                                #  max_currents=max_currents_sk_num
-                                 )
+                                 port=self.port)
         skyraLaser.setMinCurrents(min_currents_sk_num)
         skyraLaser.setMaxCurrents(max_currents_sk_num)
         skyraLaser.setUseLUT(self.use_LUT)
@@ -220,6 +201,16 @@ class laser(object):
             skyraLaser.turnOn(self.names_to_channels[ch])
         for ch in list(experiment.wavelengths):
             skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0)
+            highest_power = experiment.wavelengths[ch] / \
+                np.exp(-scan.zTiles * experiment.zWidth /
+                       experiment.attenuations[ch])
+            if skyraLaser.use_LUT:
+                maxPower = skyraLaser.LUT['ch' + str(self.names_to_channels[ch])]['power'][-1]
+            else:
+                maxPower = self.max_powers[ch]
+            if highest_power > maxPower:
+                raise Exception('Power will be out of range at final Z ' +
+                                'position. Adjust power or attenuation.\n')
 
         print('finished initializing laser')
         return skyraLaser
@@ -246,8 +237,9 @@ class stage(object):
         self.rate = stage_dict['rate']
         self.model = stage_dict['model']
 
-        # Should check the velocity and acceration, I think this really shouldn't
-        # be part of the init since it's set to different values in various places
+        # Should check the velocity and acceration, I think this
+        # really shouldn't be part of the init since it's set to different
+        # values in various places
         self.settings = {'backlash': 0.0,
                          'velocity': 1.0,
                          'acceleration': 100
@@ -266,7 +258,7 @@ class stage(object):
             print('initializing stage: MS2000')
             import hardware.ms2000 as ms2000
             xyzStage = ms2000.MS2000(baudrate=self.rate, port=self.port)
-            xyzStage.setTTL('Y',3)
+            xyzStage.setTTL('Y', 3)
 
         else:
             raise Exception('invalid stage type!')
@@ -308,12 +300,12 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                              camera=camera,
                                              triggered=True)
 
-    #  CONNECT LASER
+    # CONNECT LASER
 
     # according to the manual, you should wait for 2min after setting
     # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
     # TODO: disentangle laser and experiment attributes
-    skyraLaser = laser.initialize(experiment)
+    skyraLaser = laser.initialize(experiment, session)
     print(skyraLaser)
 
     # CONNECT FILTER WHEEL
@@ -369,16 +361,16 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
         for k in range(session.yTiles):
 
-            yPos = session.yOff-session.yLength/2.0+k*experiment.yWidth+experiment.yWidth/2.0
+            yPos = session.yOff - session.yLength / 2.0 + \
+                k*experiment.yWidth + experiment.yWidth / 2.0
 
             xyzStage.setVelocity('Y', 1.0)
             xyzStage.goAbsolute('Y', yPos, False)
 
             for ch in range(session.nWavelengths):
 
-                print(ch)
-                wave_str = list(experiment.wavelengths)[ch] #wavelength in nm as a string, e.g. '488'
-                print(wave_str)
+                wave_str = list(experiment.wavelengths)[ch]
+                # wave_str is wavelength in nm as a string, e.g. '488'
 
                 # ch is order of wavelenghts in main (an integer 0 -> X)
                 #   (NOT necessarily Skyra channel number)
@@ -404,7 +396,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                                                     laser=laser,
                                                     camera=camera,
                                                     experiment=experiment,
-                                                    #scan=session,
                                                     ch=ch)
 
                 waveformGenerator.ao_task.write(voltages)
@@ -445,7 +436,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # like cam is a frame or two ahead of code
                 while num_acquired < session.nFrames - 100:
 
-                    # print('you\'ve got an image!', num_acquired, 'of', 
+                    # print('you\'ve got an image!', num_acquired, 'of',
                     #       session.nFrames, 'total')
                     cam.wait_for_next_image(num_acquired)
 
