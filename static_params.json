@@ -9,7 +9,8 @@
         "compressionMode": 1
     },
     "experiment": {
-        "overlap": 30,
+        "overlapZ": 80,
+        "overlapY": 700,
         "theta": 45.0
     },
     "daq": {
@@ -54,7 +55,7 @@
         "names_to_channels": {
             "405": 1,
             "488": 2,
-            "561": 6,
+            "561": 3,
             "638": 4,
             "660": 5,
             "none": 6

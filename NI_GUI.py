@@ -14,9 +14,9 @@ daq_rate = 1e5  # Hz
 daq_name = '6738'  # PCIe card name
 daq_board = 'Dev1'
 daq_num_channels = 32  # AO channels
-n2c = {'xgalvo': 29,
-       'ygalvo': 30,
-       'etl': 31}
+n2c = {'xgalvo': 4,
+       'ygalvo': 5,
+       'etl': 7}
 
 # ############## CONNECT NIDAQ ###############
 
@@ -46,7 +46,7 @@ Econst = tk.StringVar()
 
 
 def update_voltages():
-    """ callback when the login button clicked
+    """ callback when the update button clicked
     """
 
     freq = 100  # Hz
