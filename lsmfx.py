@@ -170,11 +170,23 @@ class laser(object):
     def initialize(self, experiment):
 
         print('initializing laser')
-        print('using laser parameters use_LUT=' + self.use_LUT +
+        print('using laser parameters use_LUT=' + str(self.use_LUT) +
               ' system_name=' + self.skyra_system_name)
         input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
               ' to the laser. If this correct, press Enter to continue.')
 
+        min_currents_sk_num = {}
+        max_currents_sk_num = {}
+
+        for ch in experiment.wavelengths:  #ch is wavelength as a string
+            #self.names_to_channels[ch]
+            min_currents_sk_num[self.names_to_channels[ch]] = \
+                self.min_currents[ch]
+            max_currents_sk_num[self.names_to_channels[ch]] = \
+                self.max_currents[ch]
+
+        '''        
+        form of these vars (key is an int)
         min_currents_sk_num = {1: self.min_currents(self.names_to_channels[1]),
                                2: self.min_currents(self.names_to_channels[2]),
                                3: self.min_currents(self.names_to_channels[3]),
@@ -184,12 +196,17 @@ class laser(object):
                                2: self.max_currents(self.names_to_channels[2]),
                                3: self.max_currents(self.names_to_channels[3]),
                                4: self.max_currents(self.names_to_channels[4])}
-
+        '''
         skyraLaser = skyra.Skyra(baudrate=self.rate,
                                  port=self.port,
-                                 use_LUT=self.use_LUT,
-                                 min_currents=min_currents_sk_num,
-                                 max_currents=max_currents_sk_num)
+                                #  use_LUT=self.use_LUT,
+                                #  min_currents=min_currents_sk_num,
+                                #  max_currents=max_currents_sk_num
+                                 )
+        skyraLaser.setMinCurrents(min_currents_sk_num)
+        skyraLaser.setMaxCurrents(max_currents_sk_num)
+        skyraLaser.setUseLUT(self.use_LUT)
+        skyraLaser.importLUT()
 
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])
@@ -701,6 +718,17 @@ def h5init(dest, camera, scan, experiment):
                                                                           )
                                                                           )
                     else:
+                        if (os.environ['CONDA_DEFAULT_ENV'] != 'image'):
+
+                            print('Warning: B3D is active but the ' +
+                                  'current conda environment is: ' +
+                                  os.environ['CONDA_DEFAULT_ENV'])
+                            print('Press CTRL + C to exit and run \'conda' +
+                                  ' activate image\' before running ' +
+                                  'lsm-python-main.py')
+                            input('Press Enter to override this warning' +
+                                  ' and continue anyways')
+
                         data = f.require_dataset('/t00000/s' + str(idx).zfill(2) + '/' + str(z) + '/cells',
                                 chunks=(scan.chunkSize1,
                                         scan.chunkSize2,

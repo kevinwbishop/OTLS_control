@@ -29,9 +29,19 @@ class Skyra(RS232.RS232):
     def __init__(self, **kwds):
 
         # min and max of linear range for current control, in order by laser #
-        self.minCurrents = min_currents
-        self.maxCurrents = max_currents
-        self.use_LUT = use_LUT
+        # self.minCurrents = kwds['min_currents']
+        # self.maxCurrents = kwds['max_currents']
+        # self.use_LUT = kwds['use_LUT']
+
+        # self.minCurrents = {1: 0.0,
+        #                     2: 0.0,
+        #                     3: 0.0,
+        #                     4: 0.0}
+
+        # self.maxCurrents = {1: 1.0,
+        #                     2: 1.0,
+        #                     3: 1.0,
+        #                     4: 1.0}
 
         try:
             # open port
@@ -40,6 +50,34 @@ class Skyra(RS232.RS232):
         except Exception:
             print("Failed to connect to the Cobolt Skyra!")
 
+    def setMinCurrents(self, minCurrents):
+        """
+        Set minimum currents (i.e. current giving min power). Currents are
+        factory calibrated and should be set separately for each laser.
+        """
+        self.minCurrents = minCurrents
+
+    def setMaxCurrents(self, maxCurrents):
+        """
+        Set maxium currents (i.e. current giving max power). Currents are
+        factory calibrated and should be set separately for each laser.
+        """
+        self.maxCurrents = maxCurrents
+
+    def setUseLUT(self, use_LUT):
+        """
+        Set use_LUT to True or False. If True, a look up table will be
+        imported and used to set power. If False, linear interpolation
+        will be used to set power based on max and min current values.
+        Using a LUT will yield more accurate power settings, but must be
+        manually generated.
+        """
+        self.use_LUT = use_LUT
+
+    def importLUT(self):
+        """
+        Turn laser ON.
+        """
         # import LUT
         if self.use_LUT:
             print('importing Skyra LUT')
@@ -131,7 +169,7 @@ class Skyra(RS232.RS232):
         print('Setting high current for wavelength ' + str(wavelength) +
               ' to ' + str(current) + 'mA')
 
-        self.sendCommand(str(wavelength) + "smc " + str(current))
+        #self.sendCommand(str(wavelength) + "smc " + str(current))
         self.waitResponse()
 
     def setModulationLowCurrent(self, wavelength, power):
@@ -148,7 +186,7 @@ class Skyra(RS232.RS232):
         print('Setting low current for wavelength ' + str(wavelength) +
               ' to ' + str(current) + 'mA')
 
-        self.sendCommand(str(wavelength) + "slth " + str(current))
+        #self.sendCommand(str(wavelength) + "slth " + str(current))
         self.waitResponse()
 
     def power2current(self, wavelength, power):

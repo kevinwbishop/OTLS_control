@@ -20,10 +20,10 @@ stage_dict = static_params['stage']
 camera_dict['expTime'] = 10.0  # ms
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
-camera_dict['quantSigma'] = {'405': 0.0,
-                             '488': 0.0,
-                             '561': 0.0,
-                             '638': 0.0}
+camera_dict['quantSigma'] = {'405': 1.0,
+                             '488': 1.0,
+                             '561': 1.0,
+                             '638': 1.0}
 
 # pixel sampling: ~0.43 for water, 0.3846 for ECi
 um_per_px = 0.3846  # microns
