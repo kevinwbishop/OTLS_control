@@ -64,6 +64,12 @@ class Skyra(RS232.RS232):
         """
         self.maxCurrents = maxCurrents
 
+    def setMaxPowers(self, maxPowers):
+        """
+        Set maxium powers (nominal power setting, not actual output power)
+        """
+        self.maxPowers = maxPowers
+
     def setUseLUT(self, use_LUT):
         """
         Set use_LUT to True or False. If True, a look up table will be
@@ -222,11 +228,13 @@ class Skyra(RS232.RS232):
 
             waveMin = self.minCurrents[wavelength]
             waveMax = self.maxCurrents[wavelength]
+
             current = waveMin + power_ratio * (waveMax - waveMin)
 
             assert current >= 0.0
             assert current <= self.maxCurrents[wavelength]
 
+            return current
         else:
             raise Exception('use_LUT must be True or False')
 

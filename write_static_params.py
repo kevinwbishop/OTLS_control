@@ -9,7 +9,7 @@ static_params_write = {
         'triggerMode': 'auto sequence',
         'acquireMode': 'external',
         'compressionMode': 1,
-        'B3Denv': 'image'  # name of required conda env when B3D is active.
+        'B3Denv': ''  # name of required conda env when B3D is active.
                            # leave as empty string to allow any env.
     },
     'experiment': {
@@ -18,7 +18,7 @@ static_params_write = {
     },
     'daq': {
         'rate': 4e5,  # Hz
-        'board': 'Dev1',
+        'board': 'Dev2',
         'num_channels': 32,  # AO channels
         'names_to_channels': {
             'xgalvo': 0,
@@ -36,7 +36,7 @@ static_params_write = {
             }
     },
     'laser': {
-        'port': 'COM3',
+        'port': 'COM15',
         'rate': 9600,
         'names_to_channels': {
             '405': 4,
@@ -50,25 +50,25 @@ static_params_write = {
             '561': 50.0,
             '638': 50.0
             },
-        'skyra_system_name': 'Oxford OTLS',
-        'use_LUT': True,
+        'skyra_system_name': 'OTLS 4',
+        'use_LUT': False,
         'min_currents': {
-            '405': 37.0,
+            '405': 36.0,
             '488': 32.0,
-            '561': 1180.0,
-            '638': 101.0
+            '561': 1400.0,
+            '638': 109.0
         },
         'max_currents': {
-            '405': 78.0,
-            '488': 99.0,
-            '561': 2610.0,
-            '638': 169.0
+            '405': 77.0,
+            '488': 96.0,
+            '561': 2630.0,
+            '638': 177.0
         },
 
         'strobing': 'OFF'  # 'ON' or 'OFF'
     },
     'wheel': {
-        'port': 'COM5',
+        'port': 'COM8',
         'rate': 115200,
         'names_to_channels': {
             '405': 1,
@@ -80,12 +80,12 @@ static_params_write = {
             }
     },
     'etl': {
-        'port': 'COM6'  # this might not actually be used
+        'port': 'COM14'  # this might not actually be used
     },
     'stage': {
-        'model': 'tiger',  # must be 'tiger' or 'ms2000'
-        'port': 'COM4',
-        'rate': 115200
+        'model': 'ms2000',  # must be 'tiger' or 'ms2000'
+        'port': 'COM13',
+        'rate': 9600
     }
 }
 

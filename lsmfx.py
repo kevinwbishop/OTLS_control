@@ -176,17 +176,21 @@ class laser(object):
 
         min_currents_sk_num = {}
         max_currents_sk_num = {}
+        max_powers_sk_num = {}
 
         for ch in experiment.wavelengths:  # ch is wavelength as a string
             min_currents_sk_num[self.names_to_channels[ch]] = \
                 self.min_currents[ch]
             max_currents_sk_num[self.names_to_channels[ch]] = \
                 self.max_currents[ch]
+            max_powers_sk_num[self.names_to_channels[ch]] = \
+                self.max_powers[ch]
 
         skyraLaser = skyra.Skyra(baudrate=self.rate,
                                  port=self.port)
         skyraLaser.setMinCurrents(min_currents_sk_num)
         skyraLaser.setMaxCurrents(max_currents_sk_num)
+        skyraLaser.setMaxPowers(max_powers_sk_num)
         skyraLaser.setUseLUT(self.use_LUT)
         skyraLaser.importLUT()
 

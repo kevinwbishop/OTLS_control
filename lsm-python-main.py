@@ -17,7 +17,7 @@ stage_dict = static_params['stage']
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 10.0  # ms
+camera_dict['expTime'] = 15.0  # ms
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
 camera_dict['quantSigma'] = {'405': 1.0,
@@ -29,20 +29,19 @@ camera_dict['quantSigma'] = {'405': 1.0,
 um_per_px = 0.3846  # microns
 
 # FILE PARAMETERS
-experiment_dict['drive'] = 'E'
+experiment_dict['drive'] = 'A'
 experiment_dict['fname'] = 'code_testing'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = 0.5  # mm
-experiment_dict['xMax'] = 1.0  # mm
-experiment_dict['yMin'] = 0.0  # mm
-experiment_dict['yMax'] = 1.5  # mm
+experiment_dict['xMin'] = -0.5  # mm
+experiment_dict['xMax'] = 0.5  # mm
+experiment_dict['yMin'] = -1.0  # mm
+experiment_dict['yMax'] = 1.0  # mm
 experiment_dict['zMin'] = 0.0  # mm
-experiment_dict['zMax'] = 0.2  # mm
+experiment_dict['zMax'] = 0.1  # mm
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'638': 1.0}
-
+experiment_dict['wavelengths'] = {'638': 5.0}
 
 experiment_dict['attenuations'] = {'405': 1.4,
                                    '488': 1.4,
@@ -56,15 +55,15 @@ experiment_dict['attenuations'] = {'405': 1.4,
 # match those in DAQExpress
 
 # X Galvo
-daq_dict['xmin'] = {'405': 0.0000,
-                    '488': 0.0000,
-                    '561': 0.0000,
-                    '638': 0.0000}
+daq_dict['xmin'] = {'405': -5.1000,
+                    '488': -5.1000,
+                    '561': -5.1000,
+                    '638': -5.1000}
 
-daq_dict['xmax'] = {'405': 2.3700,
-                    '488': 2.3650,
-                    '561': 2.3650,
-                    '638': 2.3650}
+daq_dict['xmax'] = {'405': 5.0000,
+                    '488': 5.0000,
+                    '561': 5.0000,
+                    '638': 5.0000}
 
 daq_dict['xpp'] = {'405': 0.6000,
                    '488': 0.6000,
@@ -78,22 +77,22 @@ daq_dict['ymin'] = {'405': -2.000,
                     '638': -2.000}
 
 # >>>>>>>  Adjust ymax  <<<<<<<
-daq_dict['ymax'] = {'405': 2.1250,
-                    '488': 2.1100,
-                    '561': 2.1100,
-                    '638': 2.1050}
+daq_dict['ymax'] = {'405': 2.1740,
+                    '488': 2.1740,
+                    '561': 2.1740,
+                    '638': 2.1740}
 
-daq_dict['ypp'] = {'405': 0.0400,
-                   '488': 0.0400,
-                   '561': 0.0400,
-                   '638': 0.0400}
+daq_dict['ypp'] = {'405': 0.0090,
+                   '488': 0.0090,
+                   '561': 0.0090,
+                   '638': 0.0090}
 
 # ETL
 # >>>>>>>  Adjust econst  <<<<<<<
-daq_dict['econst'] = {'405': 2.6300,
+daq_dict['econst'] = {'405': 2.5000,
                       '488': 2.5000,
                       '561': 2.5000,
-                      '638': 2.5200}
+                      '638': 2.5000}
 
 
 # ------ Automatically compute remaining parameters  ------ #

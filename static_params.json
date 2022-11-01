@@ -7,7 +7,7 @@
         "triggerMode": "auto sequence",
         "acquireMode": "external",
         "compressionMode": 1,
-        "B3Denv": "image"
+        "B3Denv": ""
     },
     "experiment": {
         "overlap": 30,
@@ -15,7 +15,7 @@
     },
     "daq": {
         "rate": 400000.0,
-        "board": "Dev1",
+        "board": "Dev2",
         "num_channels": 32,
         "names_to_channels": {
             "xgalvo": 0,
@@ -33,7 +33,7 @@
         }
     },
     "laser": {
-        "port": "COM3",
+        "port": "COM15",
         "rate": 9600,
         "names_to_channels": {
             "405": 4,
@@ -47,24 +47,24 @@
             "561": 50.0,
             "638": 50.0
         },
-        "skyra_system_name": "Oxford OTLS",
-        "use_LUT": true,
+        "skyra_system_name": "OTLS 4",
+        "use_LUT": false,
         "min_currents": {
-            "405": 37.0,
+            "405": 36.0,
             "488": 32.0,
-            "561": 1180.0,
-            "638": 101.0
+            "561": 1400.0,
+            "638": 109.0
         },
         "max_currents": {
-            "405": 78.0,
-            "488": 99.0,
-            "561": 2610.0,
-            "638": 169.0
+            "405": 77.0,
+            "488": 96.0,
+            "561": 2630.0,
+            "638": 177.0
         },
         "strobing": "OFF"
     },
     "wheel": {
-        "port": "COM5",
+        "port": "COM8",
         "rate": 115200,
         "names_to_channels": {
             "405": 1,
@@ -76,11 +76,11 @@
         }
     },
     "etl": {
-        "port": "COM6"
+        "port": "COM14"
     },
     "stage": {
-        "model": "tiger",
-        "port": "COM4",
-        "rate": 115200
+        "model": "ms2000",
+        "port": "COM13",
+        "rate": 9600
     }
 }
