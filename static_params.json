@@ -10,7 +10,8 @@
         "B3Denv": ""
     },
     "experiment": {
-        "overlap": 30,
+        "overlapZ": 30,
+        "overlapY": 30,
         "theta": 45.0
     },
     "daq": {

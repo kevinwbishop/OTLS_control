@@ -13,7 +13,8 @@ static_params_write = {
                            # leave as empty string to allow any env.
     },
     'experiment': {
-        'overlap': 30,  # number of px overlap in Y and Z between tiles
+        'overlapZ': 30,
+        'overlapY': 30,  # number of px overlap in Y and Z between tiles
         'theta': 45.0,  # light sheet angle in deg
     },
     'daq': {

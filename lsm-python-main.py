@@ -100,9 +100,9 @@ camera_dict['sampling'] = um_per_px
 
 experiment_dict['xWidth'] = um_per_px  # um
 experiment_dict['yWidth'] = \
-    (camera_dict['X'] - experiment_dict['overlap']) * um_per_px / 1000  # mm
+    (camera_dict['X'] - experiment_dict['overlapY']) * um_per_px / 1000  # mm
 experiment_dict['zWidth'] = \
-    (camera_dict['Y'] / 1.4142 - experiment_dict['overlap']) * \
+    (camera_dict['Y'] / 1.4142 - experiment_dict['overlapZ']) * \
     um_per_px / 1000  # mm
 
 # construct objects

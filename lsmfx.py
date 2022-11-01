@@ -74,8 +74,8 @@ class experiment(object):
         # self.powers = powers
         self.attenuations = experiment_dict['attenuations']
         self.theta = experiment_dict['theta']
-        self.overlap = experiment_dict['overlap']
-
+        self.overlapY = experiment_dict['overlapY']
+        self.overlapZ = experiment_dict['overlapZ']
 
 class scan(object):
     def __init__(self, experiment, camera):
