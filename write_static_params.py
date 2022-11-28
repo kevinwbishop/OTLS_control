@@ -1,11 +1,11 @@
 import json
 
-# pixel sampling: ~0.43 for water, 0.3846 for ECi
-um_per_px = 0.373  # microns
+# pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
+um_per_px = 0.0  # microns
 
 static_params_write = {
     'camera': {
-        'number': 0,
+        'number': 0, # int e.g. 0
         'Y': 256,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
@@ -14,17 +14,17 @@ static_params_write = {
         'acquireMode': 'external',
         'compressionMode': 1,
         'B3Denv': ''  # name of required conda env when B3D is active.
-                           # leave as empty string to allow any env.
+        			  # e.g. 'image'. Leave as empty string to allow any env.
     },
     'experiment': {
         'overlapZ': 30,
-        'overlapY': 30,  # number of px overlap in Y and Z between tiles
+        'overlapY': 100,  # number of px overlap in Y and Z between tiles
         'theta': 45.0,  # light sheet angle in deg
         'xWidth': um_per_px
     },
     'daq': {
         'rate': 4e5,  # Hz
-        'board': 'Dev2',
+        'board': '',  # board number e.g. 'Dev0'
         'num_channels': 32,  # AO channels
         'names_to_channels': {
             'xgalvo': 0,
@@ -34,7 +34,7 @@ static_params_write = {
             'camera0_ex': 4,
             'camera0_aq': 5,
             'etl': 6,
-            'daq_active': 7,  # adjusting behavior of this!
+            'daq_active': 7,
             '405': 8,
             '488': 9,
             '561': 11,
@@ -42,7 +42,7 @@ static_params_write = {
             }
     },
     'laser': {
-        'port': 'COM15',
+        'port': '', # e.g. 'COM1'
         'rate': 9600,
         'names_to_channels': {
             '405': 4,
@@ -56,25 +56,25 @@ static_params_write = {
             '561': 50.0,
             '638': 50.0
             },
-        'skyra_system_name': 'OTLS 4',
-        'use_LUT': False,
+        'skyra_system_name': 'Default System',
+        'use_LUT': False,  # True or False
         'min_currents': {
-            '405': 36.0,
-            '488': 32.0,
-            '561': 1400.0,
-            '638': 109.0
+            '405': 0.0,
+            '488': 0.0,
+            '561': 0.0,
+            '638': 0.0
         },
         'max_currents': {
-            '405': 77.0,
-            '488': 96.0,
-            '561': 2630.0,
-            '638': 177.0
+            '405': 0.0,
+            '488': 0.0,
+            '561': 0.0,
+            '638': 0.0
         },
 
         'strobing': 'OFF'  # 'ON' or 'OFF'
     },
     'wheel': {
-        'port': 'COM8',
+        'port': '', # e.g. 'COM1'
         'rate': 115200,
         'names_to_channels': {
             '405': 1,
@@ -86,12 +86,13 @@ static_params_write = {
             }
     },
     'etl': {
-        'port': 'COM14'  # this might not actually be used
+        'port': ''  # e.g. 'COM1'
+        # The ETL port might not actually be used
     },
     'stage': {
-        'model': 'ms2000',  # must be 'tiger' or 'ms2000'
-        'port': 'COM13',
-        'rate': 9600
+        'model': '',  # must be 'tiger' or 'ms2000'
+        'port': '', # e.g. 'COM1'
+        'rate': 0 # 115200 for Tiger or 9600 for MS2000
     }
 }
 
