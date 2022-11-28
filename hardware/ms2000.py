@@ -99,6 +99,7 @@ class MS2000(RS232.RS232):
             self.z = float(self.z)*self.unit_to_um # convert to mm
         except:
             print("Stage Error")
+            raise Exception('Stage Error - restart code')
         return [self.x, self.y, self.z]
 
     ## setBacklash

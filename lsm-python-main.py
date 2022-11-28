@@ -1,112 +1,112 @@
-#!/usr/bin/python
-
 import lsmfx
-from lsmfx import experiment
-from lsmfx import camera
-from lsmfx import daq
-from lsmfx import laser
-from lsmfx import wheel
-from lsmfx import etl
-from lsmfx import stage
+import json
+
+# import static parameters
+with open('static_params.json', 'r') as read_file:
+    static_params = json.load(read_file)
+
+camera_dict = static_params['camera']
+experiment_dict = static_params['experiment']
+daq_dict = static_params['daq']
+laser_dict = static_params['laser']
+wheel_dict = static_params['wheel']
+etl_dict = static_params['etl']
+stage_dict = static_params['stage']
 
 
-# NEW VERSION
-
-um_per_px = 0.3846 # microns        0.43 for water, 0.3846 for ECi
+# ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera.number = 0
-camera.sampling = um_per_px
-camera.expTime = 10.0 # ms
-camera.Y = 256
-camera.X = 2048
-camera.shutterMode = 'top middle bottom middle'
-camera.triggerMode = 'auto sequence'
-camera.acquireMode = 'external'
-camera.compressionMode = 1
-camera.quantSigma = {'405': 1.0, '488': 1.0, '561': 1.0, '638': 1.0}
+camera_dict['expTime'] = 10.0  # ms
+
+# B3D compression. 0.0 = off, 1.0 = standard compression
+camera_dict['quantSigma'] = {'405': 1.0,
+                             '488': 1.0,
+                             '561': 1.0,
+                             '638': 1.0}
+
+# FILE PARAMETERS
+experiment_dict['drive'] = 'A'
+experiment_dict['fname'] = 'OTLS4_ECi_beads_11-22-22_24mV_Ypp_2447mV_Ymax_2531mV_ETL'  # file name
 
 # ROI PARAMETERS
-experiment.drive = 'K'
-experiment.fname = 'AFM030B_2mW' # specimen names
-experiment.overlap = 30 # number of px overlap in Y and Z between tiles
-experiment.xMin = -3.8 # mm
-experiment.xMax = -0.6 # mm
-experiment.yMin = -0.7 # mm
-experiment.yMax = 2.5 # mm
-experiment.zMin = -0.03 # mm
-experiment.zMax = 1.50 # mm
-experiment.xWidth = um_per_px # um
-experiment.yWidth = (camera.X - experiment.overlap) * um_per_px / 1000 # mm
-experiment.zWidth = (camera.Y/1.4142 - experiment.overlap) * um_per_px / 1000 # mm
-experiment.wavelengths = {'488': 2.0, '638': 2.0}		# set experiment wavelenths here
-experiment.attenuations = {'405': 1000.0, '488': 1000.0, '561': 1000.0, '638': 1000.0}
-experiment.theta = 45.0 # light sheet angle
+experiment_dict['xMin'] = -0.2  # mm
+experiment_dict['xMax'] = 0.2  # mm
+experiment_dict['yMin'] = -0.4  # mm
+experiment_dict['yMax'] = 0.4  # mm
+experiment_dict['zMin'] = 0.1  # mm
+experiment_dict['zMax'] = 0.15  # mm
+
+# Uncomment this line to force no filter on 638 channel (i.e. reflective beads)
+# otherwise leave this line commented out
+wheel_dict['names_to_channels']['638'] = 6
+
+# set experiment wavelenths here, power in mW
+experiment_dict['wavelengths'] = {'638': 2.0}
+
+experiment_dict['attenuations'] = {'405': 1.4,
+                                   '488': 1.4,
+                                   '561': 1.4,
+                                   '638': 1000}
 
 
-# VOLTAGE PARAMETERS
-daq.rate = 4e5 # Hz
-daq.board = 'Dev3'
-daq.num_channels = 32 # AO channels
-daq.names_to_channels = {'xgalvo': 0,
-						 'ygalvo': 1,
-						 'camera2_ex': 2,
-						 'camera2_aq': 3, 
-						 'camera0_ex': 4,
-						 'camera0_aq': 5,
-						 'etl': 6,
-						 'daq_active': 7,	#adjusting behavior of this!
-						 '405': 8, 
-						 '488': 9,
-						 '561': 11,
-						 '638': 12}
-daq.xamplitude = {'405': 0.1400, '488': 0.3000, '561': 0.1400, '638': 0.3000}
-daq.xoffset =    {'405': -0.040, '488': 1.1750, '561': -0.040, '638': 1.1750} # Volts
-daq.yamplitude = {'405': 0.0017, '488': 0.0195, '561': 0.0200, '638': 0.0195} # Volts
-daq.yoffset =    {'405': 0.1200, '488': 0.0650, '561': 0.0575, '638': 0.0650} # Volts
-daq.eamplitude = {'405': 0.0000, '488': 0.0000, '561': 0.0000, '638': 0.0000} # Volts
-daq.eoffset =    {'405': 2.6300, '488': 2.5000, '561': 2.5850, '638': 2.5000} # Volts
+# NEW: set DAQ parameters to match DAQExpress (values in volts)
+# Only ymax should be adjusted for each sample. Remaining
+# parameters should not be changed, but you should confirm they
+# match those in DAQExpress
 
-'''
-water 5/11/22
-daq.xamplitude = {'405': 0.1400, '488': 0.1400, '561': 0.1400, '638': 0.3000}
-daq.xoffset =    {'405': -0.040, '488': -0.040, '561': -0.040, '638': 1.1800} # Volts
-daq.yamplitude = {'405': 0.0017, '488': 0.0017, '561': 0.0017, '638': 0.0200} # Volts
-daq.yoffset =    {'405': 0.1200, '488': 0.1300, '561': 0.1310, '638': 0.0660} # Volts
-daq.eamplitude = {'405': 0.0000, '488': 0.0000, '561': 0.0000, '638': 0.0000} # Volts
-daq.eoffset =    {'405': 2.6300, '488': 2.5600, '561': 2.5850, '638': 2.5050} # Volts
-'''
+# X Galvo
+daq_dict['xmin'] = {'405': -5.0620,
+                    '488': -5.0620,
+                    '561': -5.0620,
+                    '638': -5.0500}
 
-# LASER PARAMETERS
-laser.port = 'COM4'
-laser.rate = 9600
-laser.names_to_channels = {'405': 4,
-						   '488': 3,
-						   '561': 1,
-						   '638': 2}
+daq_dict['xmax'] = {'405': 5.0000,
+                    '488': 5.0000,
+                    '561': 5.0000,
+                    '638': 5.0000}
 
-laser.max_powers = {'405': 50.0,
-					'488': 50.0,
-					'561': 50.0,
-					'638': 50.0}
+daq_dict['xpp'] = {'405': 0.6000,
+                   '488': 0.6000,
+                   '561': 0.6000,
+                   '638': 1.2000}
 
-# FILTER WHEEL PARAMETERS
-wheel.port = 'COM6'
-wheel.rate = 115200
-wheel.names_to_channels = {'405': 1,
-						   '488': 2,
-						   '561': 3,
-						   '638': 4,
-						   '660': 5,
-						   'none': 6}
+# Y Galvo
+daq_dict['ymin'] = {'405': -2.000,
+                    '488': -2.000,
+                    '561': -2.000,
+                    '638': -2.000}
 
-# ETL PARAMETERS
-etl.port = 'COM5'
+# >>>>>>>  Adjust ymax  <<<<<<<
+daq_dict['ymax'] = {'405': 2.1740,
+                    '488': 2.1780,
+                    '561': 2.1880,
+                    '638': 2.4470}
 
-# XYZ STAGE PARAMETERS
-stage.port = 'COM3'
-stage.rate = 115200
+daq_dict['ypp'] = {'405': 0.0075,
+                   '488': 0.008,
+                   '561': 0.008,
+                   '638': 0.024}
 
-############ BEGIN SCANNING ##############
+# ETL
+# >>>>>>>  Do NOT adjust  <<<<<<<
+daq_dict['econst'] = {'405': 2.5480,
+                      '488': 2.5180,
+                      '561': 2.5230,
+                      '638': 2.5310}
 
-lsmfx.scan3D(experiment, camera, daq, laser, wheel, etl, stage)
+
+# construct objects
+cameraObj = lsmfx.camera(camera_dict)
+experimentObj = lsmfx.experiment(experiment_dict)
+daqObj = lsmfx.daq(daq_dict)
+laserObj = lsmfx.laser(laser_dict)
+wheelObj = lsmfx.wheel(wheel_dict)
+etlObj = lsmfx.etl(etl_dict)
+stageObj = lsmfx.stage(stage_dict)
+
+print('potato')
+
+# Begin scanning
+lsmfx.scan3D(experimentObj, cameraObj, daqObj, laserObj, wheelObj, etlObj,
+             stageObj)
