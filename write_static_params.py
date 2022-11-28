@@ -1,10 +1,14 @@
 import json
 
+# pixel sampling: ~0.43 for water, 0.3846 for ECi
+um_per_px = 0.373  # microns
+
 static_params_write = {
     'camera': {
         'number': 0,
         'Y': 256,  # frame size in pixels
         'X': 2048,
+        'sampling': um_per_px,
         'shutterMode': 'top middle bottom middle',
         'triggerMode': 'auto sequence',
         'acquireMode': 'external',
@@ -16,6 +20,7 @@ static_params_write = {
         'overlapZ': 30,
         'overlapY': 30,  # number of px overlap in Y and Z between tiles
         'theta': 45.0,  # light sheet angle in deg
+        'xWidth': um_per_px
     },
     'daq': {
         'rate': 4e5,  # Hz
@@ -90,5 +95,14 @@ static_params_write = {
     }
 }
 
+# Compute sampling parameters
+static_params_write['experiment']['yWidth'] = \
+    (static_params_write['camera']['X'] - \
+    static_params_write['experiment']['overlapY']) * um_per_px / 1000  # mm
+static_params_write['experiment']['zWidth'] = \
+    (static_params_write['camera']['Y'] / 1.4142 - \
+    static_params_write['experiment']['overlapZ']) * um_per_px / 1000  # mm
+
+# Write JSON
 with open('static_params.json', 'w') as write_file:
     json.dump(static_params_write, write_file, indent=4)

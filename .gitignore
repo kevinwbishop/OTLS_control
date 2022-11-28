@@ -7,3 +7,7 @@ __pycache__/*
 
 # ignore static_params.json (different for each system)
 static_params.json
+
+# ignore local_files
+local_files/*
+

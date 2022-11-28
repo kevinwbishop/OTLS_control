@@ -17,7 +17,7 @@ stage_dict = static_params['stage']
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 15.0  # ms
+camera_dict['expTime'] = 10.0  # ms
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
 camera_dict['quantSigma'] = {'405': 1.0,
@@ -25,40 +25,41 @@ camera_dict['quantSigma'] = {'405': 1.0,
                              '561': 1.0,
                              '638': 1.0}
 
-# pixel sampling: ~0.43 for water, 0.3846 for ECi
-um_per_px = 0.3846  # microns
-
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'code_testing'  # file name
+experiment_dict['fname'] = 'OTLS4_ECi_beads_11-22-22_24mV_Ypp_2447mV_Ymax_2531mV_ETL'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = -0.5  # mm
-experiment_dict['xMax'] = 0.5  # mm
-experiment_dict['yMin'] = -1.0  # mm
-experiment_dict['yMax'] = 1.0  # mm
-experiment_dict['zMin'] = 0.0  # mm
-experiment_dict['zMax'] = 0.1  # mm
+experiment_dict['xMin'] = -0.2  # mm
+experiment_dict['xMax'] = 0.2  # mm
+experiment_dict['yMin'] = -0.4  # mm
+experiment_dict['yMax'] = 0.4  # mm
+experiment_dict['zMin'] = 0.1  # mm
+experiment_dict['zMax'] = 0.15  # mm
+
+# Uncomment this line to force no filter on 638 channel (i.e. reflective beads)
+# otherwise leave this line commented out
+wheel_dict['names_to_channels']['638'] = 6
 
 # set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'638': 5.0}
+experiment_dict['wavelengths'] = {'638': 2.0}
 
 experiment_dict['attenuations'] = {'405': 1.4,
                                    '488': 1.4,
                                    '561': 1.4,
-                                   '638': 1.4}
+                                   '638': 1000}
 
 
 # NEW: set DAQ parameters to match DAQExpress (values in volts)
-# Only ymax and econst should be adjusted for each sample. Remaining
+# Only ymax should be adjusted for each sample. Remaining
 # parameters should not be changed, but you should confirm they
 # match those in DAQExpress
 
 # X Galvo
-daq_dict['xmin'] = {'405': -5.1000,
-                    '488': -5.1000,
-                    '561': -5.1000,
-                    '638': -5.1000}
+daq_dict['xmin'] = {'405': -5.0620,
+                    '488': -5.0620,
+                    '561': -5.0620,
+                    '638': -5.0500}
 
 daq_dict['xmax'] = {'405': 5.0000,
                     '488': 5.0000,
@@ -68,7 +69,7 @@ daq_dict['xmax'] = {'405': 5.0000,
 daq_dict['xpp'] = {'405': 0.6000,
                    '488': 0.6000,
                    '561': 0.6000,
-                   '638': 0.6000}
+                   '638': 1.2000}
 
 # Y Galvo
 daq_dict['ymin'] = {'405': -2.000,
@@ -78,32 +79,22 @@ daq_dict['ymin'] = {'405': -2.000,
 
 # >>>>>>>  Adjust ymax  <<<<<<<
 daq_dict['ymax'] = {'405': 2.1740,
-                    '488': 2.1740,
-                    '561': 2.1740,
-                    '638': 2.1740}
+                    '488': 2.1780,
+                    '561': 2.1880,
+                    '638': 2.4470}
 
-daq_dict['ypp'] = {'405': 0.0090,
-                   '488': 0.0090,
-                   '561': 0.0090,
-                   '638': 0.0090}
+daq_dict['ypp'] = {'405': 0.0075,
+                   '488': 0.008,
+                   '561': 0.008,
+                   '638': 0.024}
 
 # ETL
-# >>>>>>>  Adjust econst  <<<<<<<
-daq_dict['econst'] = {'405': 2.5000,
-                      '488': 2.5000,
-                      '561': 2.5000,
-                      '638': 2.5000}
+# >>>>>>>  Do NOT adjust  <<<<<<<
+daq_dict['econst'] = {'405': 2.5480,
+                      '488': 2.5180,
+                      '561': 2.5230,
+                      '638': 2.5310}
 
-
-# ------ Automatically compute remaining parameters  ------ #
-camera_dict['sampling'] = um_per_px
-
-experiment_dict['xWidth'] = um_per_px  # um
-experiment_dict['yWidth'] = \
-    (camera_dict['X'] - experiment_dict['overlapY']) * um_per_px / 1000  # mm
-experiment_dict['zWidth'] = \
-    (camera_dict['Y'] / 1.4142 - experiment_dict['overlapZ']) * \
-    um_per_px / 1000  # mm
 
 # construct objects
 cameraObj = lsmfx.camera(camera_dict)
