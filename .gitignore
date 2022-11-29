@@ -4,3 +4,6 @@ __pycache__/*
 
 # ignore folder properties files (mac)
 .DS_Store
+
+# ignore the power_current file
+power_current.json

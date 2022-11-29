@@ -488,7 +488,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # laser stops and starts appropriately with this one active
                 # and the top write_zeros() commented out
 
-                skyraLaser.turnOff(list(experiment.wavelengths)[ch])
+                # skyraLaser.turnOff(list(experiment.wavelengths)[ch]) # old code, which is a wrong command
+                skyraLaser.turnOff(laser.names_to_channels[list(experiment.wavelengths)[ch]])
                 cam.stop()
 
                 tile_end_time = timer.time()

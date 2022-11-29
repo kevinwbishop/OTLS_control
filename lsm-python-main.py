@@ -30,24 +30,25 @@ um_per_px = 0.3846  # microns
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = 'code_testing'  # file name
+experiment_dict['fname'] = '16-092G_CK8_0.4-0.5mW_10ms'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = 0.5  # mm
-experiment_dict['xMax'] = 1.0  # mm
-experiment_dict['yMin'] = 0.0  # mm
-experiment_dict['yMax'] = 1.5  # mm
-experiment_dict['zMin'] = 0.0  # mm
-experiment_dict['zMax'] = 0.2  # mm
+experiment_dict['xMin'] = -3.0  # mm
+experiment_dict['xMax'] = 2.0  # mm
+experiment_dict['yMin'] = -6.8  # mm
+experiment_dict['yMax'] = -1.8  # mm
+experiment_dict['zMin'] = -1.6  # mm
+experiment_dict['zMax'] = -1.4  # mm
 
-# set experiment wavelenths here, power in mW
-experiment_dict['wavelengths'] = {'638': 1.0}
+# IMPORTANT!!
+# set experiment wavelenths here, current in mA
+experiment_dict['wavelengths'] = {'488': 0.4, '561':0.5, '638': 0.5}
 
 
-experiment_dict['attenuations'] = {'405': 1.4,
-                                   '488': 1.4,
-                                   '561': 1.4,
-                                   '638': 1.4}
+experiment_dict['attenuations'] = {'405': 1.5,
+                                   '488': 1.5,
+                                   '561': 1.5,
+                                   '638': 1.5}
 
 
 # NEW: set DAQ parameters to match DAQExpress (values in volts)
@@ -80,7 +81,7 @@ daq_dict['ymin'] = {'405': -2.000,
 # >>>>>>>  Adjust ymax  <<<<<<<
 daq_dict['ymax'] = {'405': 2.1250,
                     '488': 2.1100,
-                    '561': 2.1100,
+                    '561': 2.1070,
                     '638': 2.1050}
 
 daq_dict['ypp'] = {'405': 0.0400,
@@ -91,7 +92,7 @@ daq_dict['ypp'] = {'405': 0.0400,
 # ETL
 # >>>>>>>  Adjust econst  <<<<<<<
 daq_dict['econst'] = {'405': 2.6300,
-                      '488': 2.5000,
+                      '488': 2.4900,
                       '561': 2.5000,
                       '638': 2.5200}
 
