@@ -27,7 +27,7 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'OTLS4_ECi_beads_11-22-22_24mV_Ypp_2447mV_Ymax_2531mV_ETL'  # file name
+experiment_dict['fname'] = 'test_file'  # file name
 
 # ROI PARAMETERS
 experiment_dict['xMin'] = -0.2  # mm
@@ -39,7 +39,7 @@ experiment_dict['zMax'] = 0.15  # mm
 
 # Uncomment this line to force no filter on 638 channel (i.e. reflective beads)
 # otherwise leave this line commented out
-wheel_dict['names_to_channels']['638'] = 6
+#wheel_dict['names_to_channels']['638'] = 6
 
 # set experiment wavelenths here, power in mW
 experiment_dict['wavelengths'] = {'638': 2.0}
@@ -47,18 +47,18 @@ experiment_dict['wavelengths'] = {'638': 2.0}
 experiment_dict['attenuations'] = {'405': 1.4,
                                    '488': 1.4,
                                    '561': 1.4,
-                                   '638': 1000}
+                                   '638': 1.4}
 
 
 # NEW: set DAQ parameters to match DAQExpress (values in volts)
-# Only ymax should be adjusted for each sample. Remaining
+# Only ymax & ETL should be adjusted for each sample. Remaining
 # parameters should not be changed, but you should confirm they
 # match those in DAQExpress
 
 # X Galvo
-daq_dict['xmin'] = {'405': -5.0620,
-                    '488': -5.0620,
-                    '561': -5.0620,
+daq_dict['xmin'] = {'405': -5.0500,
+                    '488': -5.0500,
+                    '561': -5.0500,
                     '638': -5.0500}
 
 daq_dict['xmax'] = {'405': 5.0000,
@@ -66,9 +66,9 @@ daq_dict['xmax'] = {'405': 5.0000,
                     '561': 5.0000,
                     '638': 5.0000}
 
-daq_dict['xpp'] = {'405': 0.6000,
-                   '488': 0.6000,
-                   '561': 0.6000,
+daq_dict['xpp'] = {'405': 1.2000,
+                   '488': 1.2000,
+                   '561': 1.2000,
                    '638': 1.2000}
 
 # Y Galvo
@@ -83,13 +83,13 @@ daq_dict['ymax'] = {'405': 2.1740,
                     '561': 2.1880,
                     '638': 2.4470}
 
-daq_dict['ypp'] = {'405': 0.0075,
-                   '488': 0.008,
-                   '561': 0.008,
+daq_dict['ypp'] = {'405': 0.024,
+                   '488': 0.024,
+                   '561': 0.024,
                    '638': 0.024}
 
 # ETL
-# >>>>>>>  Do NOT adjust  <<<<<<<
+# >>>>>>>  Adjust ETL  <<<<<<<
 daq_dict['econst'] = {'405': 2.5480,
                       '488': 2.5180,
                       '561': 2.5230,
