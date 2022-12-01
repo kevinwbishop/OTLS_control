@@ -161,7 +161,7 @@ class laser(object):
         self.names_to_channels = laser_dict['names_to_channels']
         self.max_powers = laser_dict['max_powers']
         self.skyra_system_name = laser_dict['skyra_system_name']
-        self.use_LUT = laser_dict['use_LUT']
+        # self.use_LUT = laser_dict['use_LUT']
         self.min_currents = laser_dict['min_currents']
         self.max_currents = laser_dict['max_currents']
         self.strobing = laser_dict['strobing']
@@ -169,8 +169,8 @@ class laser(object):
     def initialize(self, experiment, scan):
 
         print('initializing laser')
-        print('using laser parameters use_LUT=' + str(self.use_LUT) +
-              ' system_name=' + self.skyra_system_name)
+        # print('using laser parameters use_LUT=' + str(self.use_LUT) +
+        #       ' system_name=' + self.skyra_system_name)
         input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
               ' to the laser. If this correct, press Enter to continue.')
 
@@ -187,8 +187,8 @@ class laser(object):
                                  port=self.port)
         skyraLaser.setMinCurrents(min_currents_sk_num)
         skyraLaser.setMaxCurrents(max_currents_sk_num)
-        skyraLaser.setUseLUT(self.use_LUT)
-        skyraLaser.importLUT()
+        # skyraLaser.setUseLUT(self.use_LUT)
+        # skyraLaser.importLUT()
 
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])
@@ -202,16 +202,25 @@ class laser(object):
             skyraLaser.turnOn(self.names_to_channels[ch])
         for ch in list(experiment.wavelengths):
             skyraLaser.setModulationLowCurrent(self.names_to_channels[ch], 0)
-            highest_power = experiment.wavelengths[ch] / \
-                np.exp(-scan.zTiles * experiment.zWidth /
-                       experiment.attenuations[ch])
-            if skyraLaser.use_LUT:
-                maxPower = skyraLaser.LUT['ch' + str(self.names_to_channels[ch])]['power'][-1]
-            else:
-                maxPower = self.max_powers[ch]
-            if highest_power > maxPower:
-                raise Exception('Power will be out of range at final Z ' +
-                                'position. Adjust power or attenuation.\n')
+
+            highest_current = ((experiment.wavelengths[ch] - self.min_currents[ch]) / \
+                np.exp(-scan.zTiles * experiment.zWidth / experiment.attenuations[ch])) + self.min_currents[ch]
+
+            # old attenuation equation
+            # highest_current = experiment.wavelengths[ch] / \
+            #     np.exp(-scan.zTiles * experiment.zWidth / experiment.attenuations[ch])
+
+            print(highest_current)
+            print(scan.zTiles)
+            print(experiment.zWidth)
+
+            # if skyraLaser.use_LUT:
+            #     maxPower = skyraLaser.LUT['ch' + str(self.names_to_channels[ch])]['power'][-1]
+            # else:
+            maxCurrent = self.max_currents[ch]
+            if highest_current > maxCurrent:
+                raise Exception('Current will be out of range at final Z ' +
+                                'position. Adjust current or attenuation.\n')
 
         print('finished initializing laser')
         return skyraLaser

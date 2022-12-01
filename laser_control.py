@@ -41,6 +41,6 @@ class Laser(object):
         self.skyraLaser.turnOn(self.names_to_channels[wavelength]) # uncomment while run
         print("Laser Current updated to " + str(self.current) + " mA")
 
-    def turn_laser_off(self):
-        self.skyraLaser.turnOff(self.names_to_channels[self.wavelength]) # uncomment while run
-        print(str(self.wavelength) + " nm laser turned off!")
+    def turn_laser_off(self, wavelength):
+        self.skyraLaser.turnOff(self.names_to_channels[wavelength]) # uncomment while run
+        print(str(wavelength) + " nm laser turned off!")

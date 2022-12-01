@@ -4,7 +4,7 @@
 import json
 from laser_control import Laser
 from daq_control import Daq
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QDoubleSpinBox, QGridLayout, QWidget, QPushButton, QLabel, QTableWidget, QTableWidgetItem)
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QDoubleSpinBox, QGridLayout, QWidget, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QMessageBox, QAction)
 from PyQt5.QtCore import Qt
 import hardware.fw102c as fw102c
 
@@ -50,6 +50,10 @@ class MainWindow(QMainWindow):
 
         # Create layout for the UI
         layout = QGridLayout()
+
+        # quit event
+        quit = QAction("Quit", self)
+        quit.triggered.connect(self.closeEvent)
 
 ########### 405nm laser ###########
         self.label_405 = QLabel()
@@ -386,6 +390,24 @@ class MainWindow(QMainWindow):
             for i in range(6):
                 item = QTableWidgetItem(str(self.power_current[wavelength]["power"][i]))
                 self.tableWidget.setItem(i, 1, item)
+###################################
+
+
+###########close event#############
+    def closeEvent(self, event):
+        close = QMessageBox()
+        close.setText("You sure?")
+        close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QMessageBox.Yes:
+            event.accept()
+            self.laser.turn_laser_off("405")
+            self.laser.turn_laser_off("488")
+            self.laser.turn_laser_off("561")
+            self.laser.turn_laser_off("638")
+        else:
+            event.ignore()
 ###################################
 
 

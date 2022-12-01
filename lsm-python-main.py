@@ -30,25 +30,24 @@ um_per_px = 0.3846  # microns
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = '16-092G_CK8_0.4-0.5mW_10ms'  # file name
+experiment_dict['fname'] = 'test42'  # file name
 
 # ROI PARAMETERS
 experiment_dict['xMin'] = -3.0  # mm
 experiment_dict['xMax'] = 2.0  # mm
 experiment_dict['yMin'] = -6.8  # mm
 experiment_dict['yMax'] = -1.8  # mm
-experiment_dict['zMin'] = -1.6  # mm
-experiment_dict['zMax'] = -1.4  # mm
+experiment_dict['zMin'] = -0.2  # mm
+experiment_dict['zMax'] = 0  # mm
 
 # IMPORTANT!!
 # set experiment wavelenths here, current in mA
-experiment_dict['wavelengths'] = {'488': 0.4, '561':0.5, '638': 0.5}
+experiment_dict['wavelengths'] = {'638': 107}
 
-
-experiment_dict['attenuations'] = {'405': 1.5,
-                                   '488': 1.5,
-                                   '561': 1.5,
-                                   '638': 1.5}
+experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
+                                   '488': 6,
+                                   '561': 6,
+                                   '638': 6}
 
 
 # NEW: set DAQ parameters to match DAQExpress (values in volts)
