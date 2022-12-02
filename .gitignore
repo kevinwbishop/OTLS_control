@@ -7,3 +7,9 @@ __pycache__/*
 
 # ignore the power_current file
 power_current.json
+
+# ignore static_params.json (different for each system)
+static_params.json
+
+# ignore local_files
+local_files/*

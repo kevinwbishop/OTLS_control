@@ -74,8 +74,8 @@ class experiment(object):
         # self.powers = powers
         self.attenuations = experiment_dict['attenuations']
         self.theta = experiment_dict['theta']
-        self.overlap = experiment_dict['overlap']
-
+        self.overlapY = experiment_dict['overlapY']
+        self.overlapZ = experiment_dict['overlapZ']
 
 class scan(object):
     def __init__(self, experiment, camera):
@@ -176,19 +176,20 @@ class laser(object):
 
         min_currents_sk_num = {}
         max_currents_sk_num = {}
+        max_powers_sk_num = {}
 
         for ch in experiment.wavelengths:  # ch is wavelength as a string
             min_currents_sk_num[self.names_to_channels[ch]] = \
                 self.min_currents[ch]
             max_currents_sk_num[self.names_to_channels[ch]] = \
                 self.max_currents[ch]
+            max_powers_sk_num[self.names_to_channels[ch]] = \
+                self.max_powers[ch]
 
         skyraLaser = skyra.Skyra(baudrate=self.rate,
                                  port=self.port)
         skyraLaser.setMinCurrents(min_currents_sk_num)
         skyraLaser.setMaxCurrents(max_currents_sk_num)
-        # skyraLaser.setUseLUT(self.use_LUT)
-        # skyraLaser.importLUT()
 
         for ch in list(self.names_to_channels):
             skyraLaser.setModulationOn(self.names_to_channels[ch])

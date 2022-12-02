@@ -25,9 +25,6 @@ camera_dict['quantSigma'] = {'405': 1.0,
                              '561': 1.0,
                              '638': 1.0}
 
-# pixel sampling: ~0.43 for water, 0.3846 for ECi
-um_per_px = 0.3846  # microns
-
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
 experiment_dict['fname'] = 'test42'  # file name
@@ -40,8 +37,10 @@ experiment_dict['yMax'] = -1.8  # mm
 experiment_dict['zMin'] = -0.2  # mm
 experiment_dict['zMax'] = 0  # mm
 
-# IMPORTANT!!
+################## IMPORTANT!!##################
 # set experiment wavelenths here, current in mA
+################################################
+
 experiment_dict['wavelengths'] = {'638': 107}
 
 experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
@@ -51,25 +50,25 @@ experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater t
 
 
 # NEW: set DAQ parameters to match DAQExpress (values in volts)
-# Only ymax and econst should be adjusted for each sample. Remaining
+# Only ymax should be adjusted for each sample. Remaining
 # parameters should not be changed, but you should confirm they
 # match those in DAQExpress
 
 # X Galvo
-daq_dict['xmin'] = {'405': 0.0000,
-                    '488': 0.0000,
-                    '561': 0.0000,
-                    '638': 0.0000}
+daq_dict['xmin'] = {'405': -5.0620,
+                    '488': -5.0620,
+                    '561': -5.0620,
+                    '638': -5.0500}
 
-daq_dict['xmax'] = {'405': 2.3700,
-                    '488': 2.3650,
-                    '561': 2.3650,
-                    '638': 2.3650}
+daq_dict['xmax'] = {'405': 5.0000,
+                    '488': 5.0000,
+                    '561': 5.0000,
+                    '638': 5.0000}
 
 daq_dict['xpp'] = {'405': 0.6000,
                    '488': 0.6000,
                    '561': 0.6000,
-                   '638': 0.6000}
+                   '638': 1.2000}
 
 # Y Galvo
 daq_dict['ymin'] = {'405': -2.000,
@@ -83,28 +82,17 @@ daq_dict['ymax'] = {'405': 2.1250,
                     '561': 2.1070,
                     '638': 2.1050}
 
-daq_dict['ypp'] = {'405': 0.0400,
-                   '488': 0.0400,
-                   '561': 0.0400,
-                   '638': 0.0400}
+daq_dict['ypp'] = {'405': 0.0075,
+                   '488': 0.008,
+                   '561': 0.008,
+                   '638': 0.024}
 
 # ETL
-# >>>>>>>  Adjust econst  <<<<<<<
-daq_dict['econst'] = {'405': 2.6300,
-                      '488': 2.4900,
-                      '561': 2.5000,
-                      '638': 2.5200}
-
-
-# ------ Automatically compute remaining parameters  ------ #
-camera_dict['sampling'] = um_per_px
-
-experiment_dict['xWidth'] = um_per_px  # um
-experiment_dict['yWidth'] = \
-    (camera_dict['X'] - experiment_dict['overlap']) * um_per_px / 1000  # mm
-experiment_dict['zWidth'] = \
-    (camera_dict['Y'] / 1.4142 - experiment_dict['overlap']) * \
-    um_per_px / 1000  # mm
+# >>>>>>>  Do NOT adjust  <<<<<<<
+daq_dict['econst'] = {'405': 2.5480,
+                      '488': 2.5180,
+                      '561': 2.5230,
+                      '638': 2.5310}
 
 # construct objects
 cameraObj = lsmfx.camera(camera_dict)
