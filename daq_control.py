@@ -68,10 +68,10 @@ class Daq(object):
 
     def create_voltages_galvo(self):
         xmax = 5.0000
-        xmin = -5.1000
-        xpp = 0.6000
+        xmin = -5.0000
+        xpp = 7.000
         ymin = -2.0000
-        ypp = 0.0090
+        ypp = 0.0000
         xoffset = (xmax + xmin) / 2
         xamplitude = xpp / 2
         yoffset = (self.ymax + ymin) / 2

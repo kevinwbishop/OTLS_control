@@ -161,7 +161,6 @@ class laser(object):
         self.names_to_channels = laser_dict['names_to_channels']
         self.max_powers = laser_dict['max_powers']
         self.skyra_system_name = laser_dict['skyra_system_name']
-        # self.use_LUT = laser_dict['use_LUT']
         self.min_currents = laser_dict['min_currents']
         self.max_currents = laser_dict['max_currents']
         self.strobing = laser_dict['strobing']
@@ -169,8 +168,7 @@ class laser(object):
     def initialize(self, experiment, scan):
 
         print('initializing laser')
-        # print('using laser parameters use_LUT=' + str(self.use_LUT) +
-        #       ' system_name=' + self.skyra_system_name)
+        print('System_name=' + self.skyra_system_name)
         input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
               ' to the laser. If this correct, press Enter to continue.')
 
@@ -215,9 +213,6 @@ class laser(object):
             print(scan.zTiles)
             print(experiment.zWidth)
 
-            # if skyraLaser.use_LUT:
-            #     maxPower = skyraLaser.LUT['ch' + str(self.names_to_channels[ch])]['power'][-1]
-            # else:
             maxCurrent = self.max_currents[ch]
             if highest_current > maxCurrent:
                 raise Exception('Current will be out of range at final Z ' +
@@ -498,7 +493,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # laser stops and starts appropriately with this one active
                 # and the top write_zeros() commented out
 
-                # skyraLaser.turnOff(list(experiment.wavelengths)[ch]) # old code, which is a wrong command
                 skyraLaser.turnOff(laser.names_to_channels[list(experiment.wavelengths)[ch]])
                 cam.stop()
 
