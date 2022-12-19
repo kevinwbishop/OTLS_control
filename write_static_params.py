@@ -1,11 +1,11 @@
 import json
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
-um_per_px = 0.0  # microns
+um_per_px = 0.43  # microns
 
 static_params_write = {
     'camera': {
-        'number': 0, # int e.g. 0
+        'number': 0,  # int e.g. 0
         'Y': 256,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
@@ -14,17 +14,17 @@ static_params_write = {
         'acquireMode': 'external',
         'compressionMode': 1,
         'B3Denv': ''  # name of required conda env when B3D is active.
-        			  # e.g. 'image'. Leave as empty string to allow any env.
+                      # e.g. 'image'. Leave as empty string to allow any env.
     },
     'experiment': {
         'overlapZ': 30,
         'overlapY': 100,  # number of px overlap in Y and Z between tiles
-        'theta': 45.0,  # light sheet angle in deg
+        'theta': 50.0,  # light sheet angle in deg
         'xWidth': um_per_px
     },
     'daq': {
         'rate': 4e5,  # Hz
-        'board': '',  # board number e.g. 'Dev0'
+        'board': 'Dev1',  # board number e.g. 'Dev0'
         'num_channels': 32,  # AO channels
         'names_to_channels': {
             'xgalvo': 0,
@@ -42,7 +42,7 @@ static_params_write = {
             }
     },
     'laser': {
-        'port': '', # e.g. 'COM1'
+        'port': 'COM4',  # e.g. 'COM1'
         'rate': 9600,
         'names_to_channels': {
             '405': 4,
@@ -56,25 +56,25 @@ static_params_write = {
             '561': 50.0,
             '638': 50.0
             },
-        'skyra_system_name': 'Default System',
+        'skyra_system_name': 'OTLS5',
         'use_LUT': False,  # True or False
         'min_currents': {
             '405': 0.0,
             '488': 0.0,
-            '561': 0.0,
+            '561': 1165.0,
             '638': 0.0
         },
         'max_currents': {
-            '405': 0.0,
-            '488': 0.0,
-            '561': 0.0,
-            '638': 0.0
+            '405': 70.0,
+            '488': 107.0,
+            '561': 2500.0,
+            '638': 167.0
         },
 
         'strobing': 'OFF'  # 'ON' or 'OFF'
     },
     'wheel': {
-        'port': '', # e.g. 'COM1'
+        'port': 'COM7',  # e.g. 'COM1'
         'rate': 115200,
         'names_to_channels': {
             '405': 1,
@@ -90,19 +90,19 @@ static_params_write = {
         # The ETL port might not actually be used
     },
     'stage': {
-        'model': '',  # must be 'tiger' or 'ms2000'
-        'port': '', # e.g. 'COM1'
-        'rate': 0 # 115200 for Tiger or 9600 for MS2000
+        'model': 'tiger',  # must be 'tiger' or 'ms2000'
+        'port': 'COM3',  # e.g. 'COM1'
+        'rate': 115200  # 115200 for Tiger or 9600 for MS2000
     }
 }
 
 # Compute sampling parameters
 static_params_write['experiment']['yWidth'] = \
-    (static_params_write['camera']['X'] - \
-    static_params_write['experiment']['overlapY']) * um_per_px / 1000  # mm
+    (static_params_write['camera']['X'] -
+     static_params_write['experiment']['overlapY']) * um_per_px / 1000  # mm
 static_params_write['experiment']['zWidth'] = \
-    (static_params_write['camera']['Y'] / 1.4142 - \
-    static_params_write['experiment']['overlapZ']) * um_per_px / 1000  # mm
+    (static_params_write['camera']['Y'] / 1.4142 -
+     static_params_write['experiment']['overlapZ']) * um_per_px / 1000  # mm
 
 # Write JSON
 with open('static_params.json', 'w') as write_file:

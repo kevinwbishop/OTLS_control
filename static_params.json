@@ -3,7 +3,7 @@
         "number": 0,
         "Y": 256,
         "X": 2048,
-        "sampling": 0.373,
+        "sampling": 0.43,
         "shutterMode": "top middle bottom middle",
         "triggerMode": "auto sequence",
         "acquireMode": "external",
@@ -12,15 +12,15 @@
     },
     "experiment": {
         "overlapZ": 30,
-        "overlapY": 30,
-        "theta": 45.0,
-        "xWidth": 0.373,
-        "yWidth": 0.752714,
-        "zWidth": 0.05633085985009193
+        "overlapY": 100,
+        "theta": 50.0,
+        "xWidth": 0.43,
+        "yWidth": 0.8376399999999999,
+        "zWidth": 0.06493906095318909
     },
     "daq": {
         "rate": 400000.0,
-        "board": "Dev2",
+        "board": "Dev1",
         "num_channels": 32,
         "names_to_channels": {
             "xgalvo": 0,
@@ -38,7 +38,7 @@
         }
     },
     "laser": {
-        "port": "COM15",
+        "port": "COM4",
         "rate": 9600,
         "names_to_channels": {
             "405": 4,
@@ -52,24 +52,24 @@
             "561": 50.0,
             "638": 50.0
         },
-        "skyra_system_name": "OTLS 4",
+        "skyra_system_name": "OTLS5",
         "use_LUT": false,
         "min_currents": {
-            "405": 36.0,
-            "488": 32.0,
-            "561": 1400.0,
-            "638": 109.0
+            "405": 0.0,
+            "488": 0.0,
+            "561": 1165.0,
+            "638": 0.0
         },
         "max_currents": {
-            "405": 77.0,
-            "488": 96.0,
-            "561": 2630.0,
-            "638": 177.0
+            "405": 70.0,
+            "488": 107.0,
+            "561": 2500.0,
+            "638": 167.0
         },
         "strobing": "OFF"
     },
     "wheel": {
-        "port": "COM8",
+        "port": "COM7",
         "rate": 115200,
         "names_to_channels": {
             "405": 1,
@@ -81,11 +81,11 @@
         }
     },
     "etl": {
-        "port": "COM14"
+        "port": ""
     },
     "stage": {
-        "model": "ms2000",
-        "port": "COM13",
-        "rate": 9600
+        "model": "tiger",
+        "port": "COM3",
+        "rate": 115200
     }
 }
