@@ -22,16 +22,8 @@ class MainWindow(QMainWindow):
         self.wheel_dict = self.static_params['wheel']
         self.min_currents = self.laser_dict['min_currents']
         self.max_currents = self.laser_dict['max_currents']
-        self.ymax = 2.4250
-        self.eoffset = 2.45
-
-        ## Load default ETL positions for different wavelengths
-        self.eoffset_405 = self.static_params['etl']['default_etl']['405']
-        self.eoffset_488 = self.static_params['etl']['default_etl']['488']
-        self.eoffset_561 = self.static_params['etl']['default_etl']['561']
-        self.eoffset_638 = self.static_params['etl']['default_etl']['638']
-
-        ## Load current settings for each wavelength
+        self.ymax = 1.8000
+        self.eoffset = 0.9000
         self.current_405 = self.min_currents['405'] # replicate this for other lasers
         self.current_488 = self.min_currents['488']
         self.current_561 = self.min_currents['561']
@@ -254,10 +246,6 @@ class MainWindow(QMainWindow):
     def the_on_button_was_clicked_405(self):
         self.fWheel.setPosition(self.wheel_dict["names_to_channels"]["405"])
         print("Filter 1 set!")
-        ## Automatically change the ETL to the 405 position (user can adjust if needed)
-        self.the_voltage_was_changed_eoffset(self.eoffset_405)
-        self.input_eoffset.setValue(self.eoffset_405)
-        ## Turn on laser
         self.laser.turn_laser_on('405', self.current_405)
         self.daq.start("405")
         self.off_button_405.setDisabled(False)
@@ -271,10 +259,6 @@ class MainWindow(QMainWindow):
     def the_on_button_was_clicked_488(self):
         self.fWheel.setPosition(self.wheel_dict["names_to_channels"]["488"])
         print("Filter 2 set!")
-        ## Automatically change the ETL to the 488 position (user can adjust if needed)
-        self.the_voltage_was_changed_eoffset(self.eoffset_488)
-        self.input_eoffset.setValue(self.eoffset_488)
-        ## Turn on laser
         self.laser.turn_laser_on('488', self.current_488)
         self.daq.start("488")
         self.off_button_488.setDisabled(False)
@@ -288,10 +272,6 @@ class MainWindow(QMainWindow):
     def the_on_button_was_clicked_561(self):
         self.fWheel.setPosition(self.wheel_dict["names_to_channels"]["561"])
         print("Filter 3 set!")
-        ## Automatically change the ETL to the 561 position (user can adjust if needed)
-        self.the_voltage_was_changed_eoffset(self.eoffset_561)
-        self.input_eoffset.setValue(self.eoffset_561)
-        ## Turn on laser
         self.laser.turn_laser_on('561', self.current_561)
         self.daq.start("561")
         self.off_button_561.setDisabled(False)
@@ -305,10 +285,6 @@ class MainWindow(QMainWindow):
     def the_on_button_was_clicked_638(self):
         self.fWheel.setPosition(self.wheel_dict["names_to_channels"]["638"])
         print("Filter 4 set!")
-        ## Automatically change the ETL to the 638 position (user can adjust if needed)
-        self.the_voltage_was_changed_eoffset(self.eoffset_638)
-        self.input_eoffset.setValue(self.eoffset_638)
-        ## Turn on laser
         self.laser.turn_laser_on('638', self.current_638)
         self.daq.start("638")
         self.off_button_638.setDisabled(False)

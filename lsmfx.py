@@ -12,7 +12,6 @@ import numpy as np
 import math
 import h5py
 import os.path
-import shutil
 import skimage.transform
 import pco
 # Tiger or MS2000 are imported below based on stage model param
@@ -21,9 +20,6 @@ import hardware.fw102c as fw102c
 import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
-import scan3D_image_wells
-import shutil
-from shutil import ignore_patterns
 
 
 class experiment(object):
@@ -41,7 +37,7 @@ class experiment(object):
 
     xMax
 
-    yMin 
+    yMin
 
     YMax
 
@@ -65,31 +61,25 @@ class experiment(object):
 
         self.drive = experiment_dict['drive']
         self.fname = experiment_dict['fname']
+        self.xMin = experiment_dict['xMin']
+        self.xMax = experiment_dict['xMax']
+        self.yMin = experiment_dict['yMin']
+        self.yMax = experiment_dict['yMax']
+        self.zMin = experiment_dict['zMin']
+        self.zMax = experiment_dict['zMax']
         self.xWidth = experiment_dict['xWidth']
         self.yWidth = experiment_dict['yWidth']
         self.zWidth = experiment_dict['zWidth']
         self.wavelengths = experiment_dict['wavelengths']
+        # self.powers = powers
         self.attenuations = experiment_dict['attenuations']
         self.theta = experiment_dict['theta']
         self.overlapY = experiment_dict['overlapY']
         self.overlapZ = experiment_dict['overlapZ']
 
-        ## If imaging pre-defined coordinates for hivex well, these keys will not be defined until lsmfx is opened 
-        check_for_keys = 'xMin', 'xMax', 'yMin', 'yMax', 'zMin', 'zMax'
-        for item in check_for_keys:
-            if item in experiment_dict:
-                self.xMin = experiment_dict['xMin']
-                self.xMax = experiment_dict['xMax']
-                self.yMin = experiment_dict['yMin']
-                self.yMax = experiment_dict['yMax']
-                self.zMin = experiment_dict['zMin']
-                self.zMax = experiment_dict['zMax']
-            else:
-                pass
-                # print('coordinates will be defined by automated well positions')
-                
 class scan(object):
     def __init__(self, experiment, camera):
+
         self.xLength = experiment.xMax - experiment.xMin  # mm
         self.yLength = round((experiment.yMax - experiment.yMin) /
                              experiment.yWidth) * experiment.yWidth  # mm
@@ -179,8 +169,8 @@ class laser(object):
 
         print('initializing laser')
         print('System_name=' + self.skyra_system_name)
-        # input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
-        #       ' to the laser. If this correct, press Enter to continue.')
+        input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
+              ' to the laser. If this correct, press Enter to continue.')
 
         min_currents_sk_num = {}
         max_currents_sk_num = {}
@@ -293,32 +283,15 @@ class stage(object):
 # initialize hardware
 # scan tiles
 
-def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
-
-    if image_wells['option'] == 'yes':
-        ## Divert imaging program if user desires to image pre-defined well positions
-        scan3D_image_wells.scan3D_image_wells(experiment, camera, daq, laser, wheel, etl, stage, image_wells)
-        exit() ## When complete, exit this program (do not proceed with standard imaging session)
+def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     # ROUND SCAN DIMENSIONS & SETUP IMAGING SESSION
     session = scan(experiment, camera)
 
+    print('made session')
     # SETUP DATA DIRECTORY
-    ## Check if drive already exists. If so, provide option to delete
-    if os.path.exists(experiment.drive + ':\\' + experiment.fname):
-        userinput = input(str(experiment.drive + ':\\' + experiment.fname) + ' already exists! permanently delete? [y/n]')
-        if userinput == 'y':
-            shutil.rmtree(experiment.drive + ':\\' + experiment.fname, ignore_errors=True)
-        if userinput== 'n':
-            sys.exit('--Terminating-- re-name write directory and try again')
-
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
-
-    # Save a copy of all files in the current directory, i.e. so user can refer to experiment settings and could reproduce experiment entirely
-    src = os.getcwd()
-    settings_rxiv = experiment.drive + ':\\' + experiment.fname + '\\settings and code archive\\'
-    shutil.copytree(src, dst=settings_rxiv, ignore = ignore_patterns('.git')) #Do not copy git repository
 
     #  CONNECT XYZ STAGE
     xyzStage, initialPos = stage.initialize()
@@ -330,9 +303,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
 
     # CONNECT NIDAQ
     waveformGenerator = ni.waveformGenerator(daq=daq,
-                                            camera=camera,
-                                            session = session,
-                                            triggered=True)
+                                             camera=camera,
+                                             triggered=True)
 
     # CONNECT LASER
 
@@ -414,6 +386,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
                 xyzStage.goAbsolute('X', -xPos, False)
 
                 # CHANGE FILTER
+
                 fWheel.setPosition(wheel.names_to_channels[wave_str])
 
                 # START SCAN
@@ -424,10 +397,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
                     np.exp(-j*experiment.zWidth /
                            experiment.attenuations[wave_str])
                     )
-                print('wavelength = ' + str(laser.names_to_channels[wave_str]))
-                print('current = ' + str(experiment.wavelengths[wave_str] /
-                    np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[wave_str])))
 
                 voltages, rep_time = write_voltages(daq=daq,
                                                     laser=laser,
@@ -552,8 +521,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
 
     cam.close()
     etl.close(soft_close=True)
-    skyraLaser.shutDown()
-    fWheel.shutDown()
     # waveformGenerator.counter_task.close()
     waveformGenerator.ao_task.close()
     xyzStage.shutDown()
