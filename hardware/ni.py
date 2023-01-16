@@ -18,9 +18,9 @@ from scipy import signal
 
 class waveformGenerator(object):
 
-	def __init__(self, daq, camera, triggered = True):
+	def __init__(self, daq, camera, session, triggered = True):
 
-		self.samples = int(daq.rate*camera.expTime) # number of samples for DAQ
+		self.samples = int(session.nFrames*daq.rate*camera.expTime/1000) # number of samples for DAQ
 
 		self.ao_task = nidaqmx.Task("ao0")
 
@@ -69,6 +69,7 @@ class waveformGenerator(object):
 		self.ao_task.ao_channels.add_ao_voltage_chan(physical_channel = '/' + daq.board + '/ao30')
 		self.ao_task.ao_channels.add_ao_voltage_chan(physical_channel = '/' + daq.board + '/ao31')
 
+		## rate (float) – Specifies the sampling rate in samples per channel per second. If you use an external source for the Sample Clock, set this input to the maximum expected rate of that clock.
 		self.ao_task.timing.cfg_samp_clk_timing(rate = daq.rate, active_edge = nidaqmx.constants.Edge.RISING, sample_mode = nidaqmx.constants.AcquisitionType.FINITE, samps_per_chan = self.samples)
 		
 		if triggered:

@@ -144,6 +144,7 @@ class Skyra(RS232.RS232):
         response = self.commWithResp(str(wavelength) + "gmc?")
         self.waitResponse()
         response = float(response[0:len(response)-5])
+        # print(response)
         return response
 
     def getModulationLowCurrent(self, wavelength):
@@ -152,45 +153,45 @@ class Skyra(RS232.RS232):
         """
 
         response = self.commWithResp(str(wavelength) + "glth?")
+        print(response)
         self.waitResponse()
         response = float(response[0:len(response)-5])
+        # print(response)
         return response
 
-    def setModulationHighCurrent(self, wavelength, power):
+    def setModulationHighCurrent(self, wavelength, current):
         """
+        MODIFIED!
         Set the modulation high current in mA.
-        power is power in mW (note - previous version used power as
-        fraction of max power)
         """
 
         # waveMin = self.minCurrents[wavelength]
 
         # current =  waveMin + power*(waveMax - waveMin)
-        current = self.power2current(wavelength, power)
+        # current = self.power2current(wavelength, power)
         waveMax = self.maxCurrents[wavelength]
-        assert current <= waveMax
-        assert current > self.getModulationLowCurrent(wavelength)
+        assert current <= waveMax # remember to change it back
+        # assert current > self.getModulationLowCurrent(wavelength)
         assert current >= 0.0
 
         print('Setting high current for wavelength ' + str(wavelength) +
-              ' to ' + str(current) + 'mA')
-
+              ' to ' + str(current) + ' mA')
         self.sendCommand(str(wavelength) + "smc " + str(current))
-        self.waitResponse()
+        # self.waitResponse()
 
-    def setModulationLowCurrent(self, wavelength, power):
+    def setModulationLowCurrent(self, wavelength, current):
         """
+        MODIFIED!
         Set the modulation low current in mA.
-        Power is in mW
         """
-        current = self.power2current(wavelength, power)
+        # current = self.power2current(wavelength, power)
         waveMax = self.maxCurrents[wavelength]
         assert current <= waveMax
-        assert current < self.getModulationHighCurrent(wavelength)
+        # assert current < self.getModulationHighCurrent(wavelength)
         assert current >= 0.0
 
         print('Setting low current for wavelength ' + str(wavelength) +
-              ' to ' + str(current) + 'mA')
+              ' to ' + str(current) + ' mA')
 
         self.sendCommand(str(wavelength) + "slth " + str(current))
         self.waitResponse()

@@ -21,9 +21,9 @@ import hardware.fw102c as fw102c
 import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
-import scan3D_image_wells
 import shutil
 from shutil import ignore_patterns
+import hivex_puck as puck
 
 
 class experiment(object):
@@ -41,7 +41,7 @@ class experiment(object):
 
     xMax
 
-    yMin 
+    yMin
 
     YMax
 
@@ -60,8 +60,7 @@ class experiment(object):
     overlap
     """
 
-    def __init__(self,
-                 experiment_dict):
+    def __init__(self, experiment_dict):
 
         self.drive = experiment_dict['drive']
         self.fname = experiment_dict['fname']
@@ -87,9 +86,10 @@ class experiment(object):
             else:
                 pass
                 # print('coordinates will be defined by automated well positions')
-                
+
 class scan(object):
     def __init__(self, experiment, camera):
+
         self.xLength = experiment.xMax - experiment.xMin  # mm
         self.yLength = round((experiment.yMax - experiment.yMin) /
                              experiment.yWidth) * experiment.yWidth  # mm
@@ -179,8 +179,8 @@ class laser(object):
 
         print('initializing laser')
         print('System_name=' + self.skyra_system_name)
-        # input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
-        #       ' to the laser. If this correct, press Enter to continue.')
+        input('If this is NOT correct, press CTRL+C to exit and avoid damage' +
+              ' to the laser. If this correct, press Enter to continue.')
 
         min_currents_sk_num = {}
         max_currents_sk_num = {}
@@ -293,270 +293,291 @@ class stage(object):
 # initialize hardware
 # scan tiles
 
-def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
+def scan3D_image_wells(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
 
     if image_wells['option'] == 'yes':
-        ## Divert imaging program if user desires to image pre-defined well positions
-        scan3D_image_wells.scan3D_image_wells(experiment, camera, daq, laser, wheel, etl, stage, image_wells)
-        exit() ## When complete, exit this program (do not proceed with standard imaging session)
+        print('User selected to image with pre-defined hivex well positions')
+        try:
+           image_wells['well_numbers'] ## Check to make sure that well numbers were defined by the user
+        except NameError:
+            print('Well numbers are not defined')
 
-    # ROUND SCAN DIMENSIONS & SETUP IMAGING SESSION
-    session = scan(experiment, camera)
+        base_name = experiment.fname ## File name before well add-ons
+        w = 0 ## Indicates how many wells have been imaged
+        for well_number in image_wells['well_numbers']:
 
-    # SETUP DATA DIRECTORY
-    ## Check if drive already exists. If so, provide option to delete
-    if os.path.exists(experiment.drive + ':\\' + experiment.fname):
-        userinput = input(str(experiment.drive + ':\\' + experiment.fname) + ' already exists! permanently delete? [y/n]')
-        if userinput == 'y':
-            shutil.rmtree(experiment.drive + ':\\' + experiment.fname, ignore_errors=True)
-        if userinput== 'n':
-            sys.exit('--Terminating-- re-name write directory and try again')
+            ## Define file name for this experiment
+            try:
+                image_wells['well_ids'] ## If user has defined specific names for each well id, add to filename
+            except NameError: ## Else if experiment names are not defined for specific wells
+                image_wells['well_ids'] = None
+                well_filename = base_name + '_well_' + str(well_number) ## re-format file name for well-based imaging
+    
+            ## Append well IDs if defined
+            if type(image_wells['well_ids']) is not None:
+                if type(image_wells['well_ids']) == str:## If the variable is a string, then only one ID was defined (user only imaging one well)
+                   well_filename = base_name + '_' + image_wells['well_ids'] + '_well_' + str(well_number) ## re-format file name for well-based imaging
+                else: ## If variable is a tuple or list, then there are multiple IDs that need to be iterated throough
+                    well_filename = base_name + '_' + image_wells['well_ids'][w] + '_well_' + str(well_number) ## re-format file name for well-based imaging
 
-    os.makedirs(experiment.drive + ':\\' + experiment.fname)
-    dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
+            ## Add coordinates of well to experiment.dict and adjust experiment file name
+            experiment.fname = well_filename
+            experiment = puck.well(well_number, experiment) ## Define imaging coordinates for this well
+            w += 1
+            
+            # ROUND SCAN DIMENSIONS & SETUP IMAGING SESSION
+            session = scan(experiment, camera)
 
-    # Save a copy of all files in the current directory, i.e. so user can refer to experiment settings and could reproduce experiment entirely
-    src = os.getcwd()
-    settings_rxiv = experiment.drive + ':\\' + experiment.fname + '\\settings and code archive\\'
-    shutil.copytree(src, dst=settings_rxiv, ignore = ignore_patterns('.git')) #Do not copy git repository
+            # SETUP DATA DIRECTORY
+            ## Check if drive already exists. If so, provide option to delete
+            if os.path.exists(experiment.drive + ':\\' + experiment.fname):
+                userinput = input(str(experiment.drive + ':\\' + experiment.fname) + ' already exists! permanently delete? [y/n]')
+                if userinput == 'y':
+                    shutil.rmtree(experiment.drive + ':\\' + experiment.fname, ignore_errors=True)
+                if userinput== 'n':
+                    sys.exit('--Terminating-- re-name write directory and try again')
 
-    #  CONNECT XYZ STAGE
-    xyzStage, initialPos = stage.initialize()
-    print(xyzStage)
+            os.makedirs(experiment.drive + ':\\' + experiment.fname)
+            dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
 
-    #  INITIALIZE H5 FILE
-    h5init(dest, camera, session, experiment)
-    write_xml(experiment=experiment, camera=camera, scan=session)
+            # Save a copy of all files in the current directory, i.e. so user can refer to experiment settings and could reproduce experiment entirely
+            src = os.getcwd()
+            settings_rxiv = experiment.drive + ':\\' + experiment.fname + '\\settings and code archive\\'
+            shutil.copytree(src, dst=settings_rxiv, ignore = ignore_patterns('.git')) #Do not copy git repository
 
-    # CONNECT NIDAQ
-    waveformGenerator = ni.waveformGenerator(daq=daq,
-                                            camera=camera,
-                                            session = session,
-                                            triggered=True)
+            #  CONNECT XYZ STAGE
+            xyzStage, initialPos = stage.initialize()
+            print(xyzStage)
 
-    # CONNECT LASER
+            #  INITIALIZE H5 FILE
+            h5init(dest, camera, session, experiment)
+            write_xml(experiment=experiment, camera=camera, scan=session)
 
-    # according to the manual, you should wait for 2min after setting
-    # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
-    # TODO: disentangle laser and experiment attributes
-    skyraLaser = laser.initialize(experiment, session)
-    print(skyraLaser)
+            # CONNECT NIDAQ
+            waveformGenerator = ni.waveformGenerator(daq=daq,
+                                                     camera=camera,
+                                                     session=session,
+                                                     triggered=True)
 
-    # CONNECT FILTER WHEEL
+            # CONNECT LASER
 
-    fWheel = fw102c.FW102C(baudrate=wheel.rate, port=wheel.port)
-    print(fWheel)
+            # according to the manual, you should wait for 2min after setting
+            # laser 1 (561) to mod mode for power to stabalize. Consider adding this in
+            # TODO: disentangle laser and experiment attributes
+            skyraLaser = laser.initialize(experiment, session)
+            print(skyraLaser)
 
-    # CONNECT TUNBALE LENS
+            # CONNECT FILTER WHEEL
 
-    etl = Opto(port=etl.port)
-    etl.connect()
-    etl.mode('analog')
-    print(etl)
+            fWheel = fw102c.FW102C(baudrate=wheel.rate, port=wheel.port)
+            print(fWheel)
 
-    # CONNECT CAMERA
-    # TODO: setup separate hardware initialization method within camera
+            # CONNECT TUNBALE LENS
 
-    cam = pco.Camera(camera_number=camera.number)
+            etl = Opto(port=etl.port)
+            etl.connect()
+            etl.mode('analog')
+            print(etl)
 
-    cam.configuration = {'exposure time': camera.expTime*1.0e-3,
-                         'roi': (1,
-                                 1023-round(camera.Y/2),
-                                 2060,
-                                 1026+round(camera.Y/2)),
-                         'trigger': camera.triggerMode,
-                         'acquire': camera.acquireMode,
-                         'pixel rate': 272250000}
+            # CONNECT CAMERA
+            # TODO: setup separate hardware initialization method within camera
 
-    cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
-    # possibly change mode to ring buffer??
+            cam = pco.Camera(camera_number=camera.number)
 
-    # IMAGING LOOP
+            cam.configuration = {'exposure time': camera.expTime*1.0e-3,
+                                 'roi': (1,
+                                         1023-round(camera.Y/2),
+                                         2060,
+                                         1026+round(camera.Y/2)),
+                                 'trigger': camera.triggerMode,
+                                 'acquire': camera.acquireMode,
+                                 'pixel rate': 272250000}
 
-    ring_buffer = np.zeros((session.blockSize,
-                           camera.Y,
-                           camera.X),
-                           dtype=np.uint16)
+            cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
+            # possibly change mode to ring buffer??
 
-    # print('made ring buffer')
-    tile = 0
-    previous_tile_time = 0
-    previous_ram = 0
+            # IMAGING LOOP
 
-    start_time = timer.time()
+            ring_buffer = np.zeros((session.blockSize,
+                                   camera.Y,
+                                   camera.X),
+                                   dtype=np.uint16)
 
-    xPos = session.xLength/2.0 - session.xOff
+            # print('made ring buffer')
+            tile = 0
+            previous_tile_time = 0
+            previous_ram = 0
 
-    for j in range(session.zTiles):
+            start_time = timer.time()
 
-        zPos = j*experiment.zWidth + session.zOff
-        xyzStage.setVelocity('Z', 0.1)
-        xyzStage.goAbsolute('Z', zPos, False)
+            xPos = session.xLength/2.0 - session.xOff
 
-        for k in range(session.yTiles):
+            for j in range(session.zTiles):
 
-            yPos = session.yOff - session.yLength / 2.0 + \
-                k*experiment.yWidth + experiment.yWidth / 2.0
+                zPos = j*experiment.zWidth + session.zOff
+                xyzStage.setVelocity('Z', 0.1)
+                xyzStage.goAbsolute('Z', zPos, False)
 
-            xyzStage.setVelocity('Y', 1.0)
-            xyzStage.goAbsolute('Y', yPos, False)
+                for k in range(session.yTiles):
 
-            for ch in range(session.nWavelengths):
+                    yPos = session.yOff - session.yLength / 2.0 + \
+                        k*experiment.yWidth + experiment.yWidth / 2.0
 
-                wave_str = list(experiment.wavelengths)[ch]
-                # wave_str is wavelength in nm as a string, e.g. '488'
+                    xyzStage.setVelocity('Y', 1.0)
+                    xyzStage.goAbsolute('Y', yPos, False)
 
-                # ch is order of wavelenghts in main (an integer 0 -> X)
-                #   (NOT necessarily Skyra channel number)
+                    for ch in range(session.nWavelengths):
 
-                xyzStage.setVelocity('X', 1.0)
-                xPos = session.xLength/2.0 - session.xOff
-                xyzStage.goAbsolute('X', -xPos, False)
+                        wave_str = list(experiment.wavelengths)[ch]
+                        # wave_str is wavelength in nm as a string, e.g. '488'
 
-                # CHANGE FILTER
-                fWheel.setPosition(wheel.names_to_channels[wave_str])
+                        # ch is order of wavelenghts in main (an integer 0 -> X)
+                        #   (NOT necessarily Skyra channel number)
 
-                # START SCAN
+                        xyzStage.setVelocity('X', 1.0)
+                        xPos = session.xLength/2.0 - session.xOff
+                        xyzStage.goAbsolute('X', -xPos, False)
 
-                skyraLaser.setModulationHighCurrent(
-                    laser.names_to_channels[wave_str],
-                    experiment.wavelengths[wave_str] /
-                    np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[wave_str])
-                    )
-                print('wavelength = ' + str(laser.names_to_channels[wave_str]))
-                print('current = ' + str(experiment.wavelengths[wave_str] /
-                    np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[wave_str])))
+                        # CHANGE FILTER
+                        fWheel.setPosition(wheel.names_to_channels[wave_str])
 
-                voltages, rep_time = write_voltages(daq=daq,
-                                                    laser=laser,
-                                                    camera=camera,
-                                                    experiment=experiment,
-                                                    ch=ch)
+                        # START SCAN
 
-                waveformGenerator.ao_task.write(voltages)
+                        skyraLaser.setModulationHighCurrent(
+                            laser.names_to_channels[wave_str],
+                            experiment.wavelengths[wave_str] /
+                            np.exp(-j*experiment.zWidth /
+                                   experiment.attenuations[wave_str])
+                            )
 
-                print('Starting tile ' + str((tile)*session.nWavelengths+ch+1),
-                      '/',
-                      str(session.nWavelengths*session.zTiles*session.yTiles))
-                print('y position: ' + str(yPos) + ' mm')
-                print('z position: ' + str(zPos) + ' mm')
-                tile_start_time = timer.time()
+                        voltages, rep_time = write_voltages(daq=daq,
+                                                            laser=laser,
+                                                            camera=camera,
+                                                            experiment=experiment,
+                                                            ch=ch)
 
-                xyzStage.setScanR(-xPos, -xPos + session.xLength)
-                xyzStage.setScanV(yPos)
+                        waveformGenerator.ao_task.write(voltages)
 
-                response = xyzStage.getMotorStatus()
-                while response[0] == 'B':
-                    response = xyzStage.getMotorStatus()
+                        print('Starting tile ' + str((tile)*session.nWavelengths+ch+1),
+                              '/',
+                              str(session.nWavelengths*session.zTiles*session.yTiles))
+                        print('y position: ' + str(yPos) + ' mm')
+                        print('z position: ' + str(zPos) + ' mm')
+                        tile_start_time = timer.time()
 
-                xyzStage.setVelocity('X', session.scanSpeed)
-                xyzStage.setVelocity('Y', session.scanSpeed)
-                xyzStage.setVelocity('Z', session.scanSpeed)
+                        xyzStage.setScanR(-xPos, -xPos + session.xLength)
+                        xyzStage.setScanV(yPos)
 
-                waveformGenerator.ao_task.start()
-                cam.start()
-                xyzStage.scan(False)
-                skyraLaser.turnOn(laser.names_to_channels[
-                    list(experiment.wavelengths)[ch]])
+                        response = xyzStage.getMotorStatus()
+                        while response[0] == 'B':
+                            response = xyzStage.getMotorStatus()
 
-                # START IMAGING LOOP
+                        xyzStage.setVelocity('X', session.scanSpeed)
+                        xyzStage.setVelocity('Y', session.scanSpeed)
+                        xyzStage.setVelocity('Z', session.scanSpeed)
 
-                num_acquired = 0
-                num_acquired_counter = 0
-                num_acquired_previous = 0
+                        waveformGenerator.ao_task.start()
+                        cam.start()
+                        xyzStage.scan(False)
+                        skyraLaser.turnOn(laser.names_to_channels[
+                            list(experiment.wavelengths)[ch]])
 
-                # while num_acquired < scan.nFrames: #original version.
-                # for some reason code frequently (but not always)
-                # gets stuck on cam.wait_for_next_image(num_acquired),
-                # like cam is a frame or two ahead of code
-                while num_acquired < session.nFrames - 100:
+                        # START IMAGING LOOP
 
-                    # print('you\'ve got an image!', num_acquired, 'of',
-                    #       session.nFrames, 'total')
-                    cam.wait_for_next_image(num_acquired)
-
-                    if num_acquired_counter == int(session.blockSize):
-                        print('Saving frames: ',
-                              str(num_acquired_previous),
-                              ' - ',
-                              str(num_acquired))
-                        print('Tile: ' + str(tile))
-                        h5write(dest,
-                                ring_buffer,
-                                tile + session.zTiles*session.yTiles*ch,
-                                num_acquired_previous, num_acquired)
+                        num_acquired = 0
                         num_acquired_counter = 0
-                        num_acquired_previous = num_acquired
-                        temp = cam.image(num_acquired)[0]
+                        num_acquired_previous = 0
 
-                        ring_buffer[num_acquired_counter] = \
-                            temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
-                                 - int(camera.X / 2) + camera.X]
+                        # while num_acquired < scan.nFrames: #original version.
+                        # for some reason code frequently (but not always)
+                        # gets stuck on cam.wait_for_next_image(num_acquired),
+                        # like cam is a frame or two ahead of code
+                        while num_acquired < session.nFrames - 100:
 
-                    else:
+                            # print('you\'ve got an image!', num_acquired, 'of',
+                            #       session.nFrames, 'total')
+                            cam.wait_for_next_image(num_acquired)
 
-                        temp = cam.image(num_acquired)[0]
+                            if num_acquired_counter == int(session.blockSize):
+                                print('Saving frames: ',
+                                      str(num_acquired_previous),
+                                      ' - ',
+                                      str(num_acquired))
+                                print('Tile: ' + str(tile))
+                                h5write(dest,
+                                        ring_buffer,
+                                        tile + session.zTiles*session.yTiles*ch,
+                                        num_acquired_previous, num_acquired)
+                                num_acquired_counter = 0
+                                num_acquired_previous = num_acquired
+                                temp = cam.image(num_acquired)[0]
 
-                        ring_buffer[num_acquired_counter] = \
-                            temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
-                                 - int(camera.X / 2) + camera.X]
+                                ring_buffer[num_acquired_counter] = \
+                                    temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
+                                         - int(camera.X / 2) + camera.X]
 
-                    if num_acquired == session.nFrames-1:
-                        print('Saving frames: ',
-                              str(num_acquired_previous),
-                              ' - ',
-                              str(session.nFrames))
+                            else:
 
-                        h5write(dest,
-                                ring_buffer[0:num_acquired_counter+1],
-                                tile + session.zTiles*session.yTiles*ch,
-                                num_acquired_previous,
-                                session.nFrames)
+                                temp = cam.image(num_acquired)[0]
 
-                    num_acquired += 1
-                    num_acquired_counter += 1
+                                ring_buffer[num_acquired_counter] = \
+                                    temp[2:camera.Y + 2, 1024 - int(camera.X / 2):1024
+                                         - int(camera.X / 2) + camera.X]
 
-                waveformGenerator.ao_task.stop()
-                waveformGenerator.write_zeros(daq=daq)
-                # For some reason this write_zeros works but the above doesn't?
-                # laser stops and starts appropriately with this one active
-                # and the top write_zeros() commented out
+                            if num_acquired == session.nFrames-1:
+                                print('Saving frames: ',
+                                      str(num_acquired_previous),
+                                      ' - ',
+                                      str(session.nFrames))
 
-                skyraLaser.turnOff(laser.names_to_channels[list(experiment.wavelengths)[ch]])
-                cam.stop()
+                                h5write(dest,
+                                        ring_buffer[0:num_acquired_counter+1],
+                                        tile + session.zTiles*session.yTiles*ch,
+                                        num_acquired_previous,
+                                        session.nFrames)
 
-                tile_end_time = timer.time()
-                tile_time = tile_end_time - tile_start_time
-                print('Tile time: ' + str(round((tile_time/60), 3)) + " min")
-                tiles_remaining = session.nWavelengths * session.zTiles * \
-                    session.yTiles - (tile * session.nWavelengths + ch + 1)
+                            num_acquired += 1
+                            num_acquired_counter += 1
 
-                if tiles_remaining != 0:
-                    print('Estimated time remaining: ',
-                          str(round((tile_time*tiles_remaining/3600), 3)),
-                          " hrs")
+                        waveformGenerator.ao_task.stop()
+                        waveformGenerator.write_zeros(daq=daq)
+                        # # For some reason this write_zeros works but the above doesn't?
+                        # # laser stops and starts appropriately with this one active
+                        # # and the top write_zeros() commented out
 
-            tile += 1
+                        skyraLaser.turnOff(laser.names_to_channels[list(experiment.wavelengths)[ch]])
+                        cam.stop()
 
-    end_time = timer.time()
+                        tile_end_time = timer.time()
+                        tile_time = tile_end_time - tile_start_time
+                        print('Tile time: ' + str(round((tile_time/60), 3)) + " min")
+                        tiles_remaining = session.nWavelengths * session.zTiles * \
+                            session.yTiles - (tile * session.nWavelengths + ch + 1)
 
-    print("Total time = ",
-          str(round((end_time - start_time)/3600, 3)),
-          " hrs")
+                        if tiles_remaining != 0:
+                            print('Estimated time remaining: ',
+                                  str(round((tile_time*tiles_remaining/3600), 3)),
+                                  " hrs")
 
-    response = xyzStage.getMotorStatus()
-    while response[0] == 'B':
-        response = xyzStage.getMotorStatus()
+                    tile += 1
 
-    cam.close()
-    etl.close(soft_close=True)
-    skyraLaser.shutDown()
-    fWheel.shutDown()
-    # waveformGenerator.counter_task.close()
-    waveformGenerator.ao_task.close()
-    xyzStage.shutDown()
+            end_time = timer.time()
+
+            print("Total time = ",
+                  str(round((end_time - start_time)/3600, 3)),
+                  " hrs")
+
+            response = xyzStage.getMotorStatus()
+            while response[0] == 'B':
+                response = xyzStage.getMotorStatus()
+
+            cam.close()
+            etl.close(soft_close=True)
+            skyraLaser.shutDown()
+            fWheel.shutDown()
+            # waveformGenerator.counter_task.close()
+            waveformGenerator.ao_task.close()
+            xyzStage.shutDown()
 
 
 def write_voltages(daq,
