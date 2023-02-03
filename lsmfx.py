@@ -544,7 +544,7 @@ def write_voltages(daq,
     yamplitude = daq.ypp[wave_key] / 2
     eoffset = daq.econst[wave_key]
 
-    samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
+    samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ in one cam frame
 
     line_time = 9.76/1.0e6  # seconds, constant for pco.edge camera
     roll_time = line_time*camera.Y/2.0  # chip rolling time in seconds
