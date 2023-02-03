@@ -125,6 +125,8 @@ class camera(object):
         self.Y = camera_dict['Y']
         self.sampling = camera_dict['sampling']
         self.expTime = camera_dict['expTime']
+        self.frameRate = camera_dict['frameRate']
+        self.slitSize = camera_dict['slitSize']
         self.triggerMode = camera_dict['triggerMode']
         self.acquireMode = camera_dict['acquireMode']
         self.shutterMode = camera_dict['shutterMode']
@@ -331,7 +333,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     cam = pco.Camera(camera_number=camera.number)
 
-    cam.configuration = {'exposure time': camera.expTime*1.0e-3,
+    cam.configuration = {'exposure time': camera.expTime*1.0e-3, # converting ms (camera.expTime) to sec (pco_cam.configuration{'exposure time})
                          'roi': (1,
                                  1023-round(camera.Y/2),
                                  2060,
@@ -340,8 +342,26 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                          'acquire': camera.acquireMode,
                          'pixel rate': 272250000}
 
+    # parameter='on': turns on light-sheet mode
+    # line_time=20e-6: sets time before going to next line in sec.
+    #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
+    line_time = (0.35*1/camera.frameRate)/camera.Y
+    cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
+
+    # lines_exposure: number of lines to expose at once
+    # lines_delay=0: default is zero, not clear what this does yet
+    cam.sdk.set_cmos_line_exposure_delay(lines_exposure=camera.slitSize,lines_delay=0)
+
+    # interface='edge': reverses readout direction. Seems like setting to 'edge' is a requirement
+    # format='top bottom': tells camera to read whole frame top to bottom (as opposed to simultaneously reading two ROIs)
+    cam.sdk.set_interface_output_format(interface='edge',format='top bottom')
+
+    # Note on set_interface_output_format from SDK manual:
+    # For all cameras with Camera Link interface it is recommended to use PCO_SetTransferParameter function instead of this 
+    # function, because the driver layer must be informed about any changes in readout format to successfully rearrange the 
+    # image data.
+
     cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
-    # possibly change mode to ring buffer??
 
     # IMAGING LOOP
 

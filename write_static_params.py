@@ -6,12 +6,12 @@ um_per_px = 0.376  # microns
 static_params_write = {
     'camera': {
         'number': 0,  # int e.g. 0
-        'Y': 256,  # frame size in pixels
+        'Y': 2044,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
-        'shutterMode': 'top middle bottom middle',
-        'triggerMode': 'auto sequence',
-        'acquireMode': 'external',
+        'shutterMode': 'UNUSED',
+        'triggerMode': 'external exposure start & software trigger',
+        'acquireMode': 'auto',
         'compressionMode': 1,
         'B3Denv': ''  # name of required conda env when B3D is active.
                       # e.g. 'image'. Leave as empty string to allow any env.
