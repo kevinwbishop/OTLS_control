@@ -1,7 +1,7 @@
 import json
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
-um_per_px = 0.43  # microns
+um_per_px = 0.376  # microns
 
 static_params_write = {
     'camera': {
