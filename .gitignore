@@ -13,3 +13,6 @@ static_params.json
 
 # ignore local_files
 local_files/*
+
+# ignore VS Code settings
+.vscode/*
