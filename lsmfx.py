@@ -306,6 +306,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # CONNECT NIDAQ
     waveformGenerator = ni.waveformGenerator(daq=daq,
                                              camera=camera,
+                                             session=session,
                                              triggered=True)
 
     # CONNECT LASER
