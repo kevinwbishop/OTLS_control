@@ -17,8 +17,7 @@ stage_dict = static_params['stage']
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 10.0  # ms
-camera_dict['frameRate'] = 10  # fps
+camera_dict['expTime'] = 10.0  # ms, frame rate is assumed to be 1/expTime
 camera_dict['slitSize'] = 20   # number of lines exposed at once in rolling shutter
 
 # B3D compression. 0.0 = off, 1.0 = standard compression

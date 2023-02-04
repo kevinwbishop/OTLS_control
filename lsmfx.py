@@ -125,7 +125,6 @@ class camera(object):
         self.Y = camera_dict['Y']
         self.sampling = camera_dict['sampling']
         self.expTime = camera_dict['expTime']
-        self.frameRate = camera_dict['frameRate']
         self.slitSize = camera_dict['slitSize']
         self.triggerMode = camera_dict['triggerMode']
         self.acquireMode = camera_dict['acquireMode']
@@ -346,7 +345,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # parameter='on': turns on light-sheet mode
     # line_time=20e-6: sets time before going to next line in sec.
     #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
-    line_time = (0.35*1/camera.frameRate)/camera.Y
+    freq = 1/(camera.expTime*1.0e-3)
+    line_time = (0.35*1/freq)/camera.Y
     cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
 
     # lines_exposure: number of lines to expose at once
