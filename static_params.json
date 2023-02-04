@@ -1,12 +1,12 @@
 {
     "camera": {
         "number": 0,
-        "Y": 256,
+        "Y": 2044,
         "X": 2048,
-        "sampling": 0.43,
-        "shutterMode": "top middle bottom middle",
-        "triggerMode": "auto sequence",
-        "acquireMode": "external",
+        "sampling": 0.376,
+        "shutterMode": "UNUSED",
+        "triggerMode": "external exposure start & software trigger",
+        "acquireMode": "auto",
         "compressionMode": 1,
         "B3Denv": ""
     },
@@ -14,9 +14,9 @@
         "overlapZ": 30,
         "overlapY": 100,
         "theta": 50.0,
-        "xWidth": 0.43,
-        "yWidth": 0.8376399999999999,
-        "zWidth": 0.06493906095318909
+        "xWidth": 0.376,
+        "yWidth": 0.732448,
+        "zWidth": 0.5321678857304484
     },
     "daq": {
         "rate": 400000.0,
@@ -25,17 +25,26 @@
         "names_to_channels": {
             "xgalvo": 0,
             "ygalvo": 1,
-            "camera2_ex": 2,
             "camera2_aq": 3,
             "camera0_ex": 4,
             "camera0_aq": 5,
-            "etl": 6,
+            "vc": 6,
+            "trigger": 2,
             "daq_active": 7,
             "405": 8,
             "488": 9,
             "561": 11,
             "638": 12
-        }
+        },
+        "freq_max": 50,
+        "Xmax": 10,
+        "Xmin": -10,
+        "Ymax": 10,
+        "Ymin": -10,
+        "VCmax": 5,
+        "VCmin": -5,
+        "Tmax": 3.3,
+        "Tmin": 0
     },
     "laser": {
         "port": "COM4",

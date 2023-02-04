@@ -17,7 +17,7 @@ stage_dict = static_params['stage']
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 10.0  # ms, frame rate is assumed to be 1/expTime
+camera_dict['expTime'] = 100.0  # ms, frame rate is assumed to be 1/expTime
 camera_dict['slitSize'] = 20   # number of lines exposed at once in rolling shutter
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
@@ -31,30 +31,52 @@ experiment_dict['drive'] = 'E'
 experiment_dict['fname'] = 'test42'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = -3.0  # mm
-experiment_dict['xMax'] = 2.0  # mm
-experiment_dict['yMin'] = -6.8  # mm
-experiment_dict['yMax'] = -1.8  # mm
-experiment_dict['zMin'] = -0.2  # mm
+experiment_dict['xMin'] = -1.0  # mm
+experiment_dict['xMax'] = 1.0  # mm
+experiment_dict['yMin'] = -1.0  # mm
+experiment_dict['yMax'] = 1.0  # mm
+experiment_dict['zMin'] = -0.5  # mm
 experiment_dict['zMax'] = 0  # mm
 
 ################## IMPORTANT!!##################
 # set experiment wavelenths here, current in mA
 ################################################
 
-experiment_dict['wavelengths'] = {'638': 107}
+experiment_dict['wavelengths'] = {'638': 0}
 
 experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
                                    '488': 6,
                                    '561': 6,
                                    '638': 6}
 
+daq_dict['p'] = {'405': 0.92,
+                 '488': 0.92,
+                 '561': 0.92,
+                 '638': 0.92}
 
-# NEW: set DAQ parameters to match DAQExpress (values in volts)
-# Only ymax should be adjusted for each sample. Remaining
-# parameters should not be changed, but you should confirm they
-# match those in DAQExpress
+daq_dict['q'] = {'405': 2.29,
+                 '488': 2.29,
+                 '561': 2.29,
+                 '638': 2.29}
 
+daq_dict['VCamplitude'] = {'405': 1.15,
+                           '488': 1.15,
+                           '561': 1.15,
+                           '638': 1.15}
+
+daq_dict['VCoffset'] = {'405': -1.65,
+                        '488': -1.65,
+                        '561': -1.65,
+                        '638': -1.65}
+
+daq_dict['Tamplitude'] = 3.3
+
+daq_dict['Tdelay'] = 34
+
+daq_dict['Tduration'] = 5
+
+
+'''
 # X Galvo
 daq_dict['xmin'] = {'405': -5.0620,
                     '488': -5.0620,
@@ -94,6 +116,7 @@ daq_dict['econst'] = {'405': 2.5480,
                       '488': 2.5180,
                       '561': 2.5230,
                       '638': 2.5310}
+'''
 
 # construct objects
 cameraObj = lsmfx.camera(camera_dict)

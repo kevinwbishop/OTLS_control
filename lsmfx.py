@@ -20,6 +20,7 @@ import hardware.fw102c as fw102c
 import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
+from matplotlib import pyplot as plt
 
 
 class experiment(object):
@@ -124,7 +125,8 @@ class camera(object):
         self.X = camera_dict['X']
         self.Y = camera_dict['Y']
         self.sampling = camera_dict['sampling']
-        self.expTime = camera_dict['expTime']
+        self.expTime = camera_dict['expTime']   # ms
+        self.freq = 1/(self.expTime*1.0e-3) # Hz
         self.slitSize = camera_dict['slitSize']
         self.triggerMode = camera_dict['triggerMode']
         self.acquireMode = camera_dict['acquireMode']
@@ -144,6 +146,7 @@ class daq(object):
         self.num_channels = daq_dict['num_channels']
         self.names_to_channels = daq_dict['names_to_channels']
 
+        '''
         self.xmin = daq_dict['xmin']
         self.xmax = daq_dict['xmax']
         self.xpp = daq_dict['xpp']
@@ -151,6 +154,40 @@ class daq(object):
         self.ymax = daq_dict['ymax']
         self.ypp = daq_dict['ypp']
         self.econst = daq_dict['econst']
+        '''
+
+        self.freq_max = daq_dict['freq_max']
+        self.Xmax = daq_dict['Xmax']
+        self.Xmin = daq_dict['Xmin']
+        self.Ymax = daq_dict['Ymax']
+        self.Ymin = daq_dict['Ymin']
+        self.VCmax = daq_dict['VCmax']
+        self.VCmin = daq_dict['VCmin']
+        self.Tmax = daq_dict['Tmax']
+        self.Tmin = daq_dict['Tmin']
+
+        self.p = daq_dict['p']
+        self.q = daq_dict['q']
+
+        self.Xamplitude = 0
+        self.Xphase = 0
+
+        self.Yamplitude = 0
+        self.Yphase = 0
+
+        self.VCamplitude = daq_dict['VCamplitude']
+        self.VCoffset = daq_dict['VCoffset']
+        self.VCphase = 0
+
+        self.Tamplitude = daq_dict['Tamplitude']
+        self.Tdelay = daq_dict['Tdelay']
+        self.Tduration = daq_dict['Tduration']
+        
+
+        # self.thread = threading.Thread(target=self.run, args=())
+        # self.thread.daemon = True
+        # self._stop = threading.Event() 
+
 
 
 class laser(object):
@@ -323,10 +360,10 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     # CONNECT TUNBALE LENS
 
-    etl = Opto(port=etl.port)
-    etl.connect()
-    etl.mode('analog')
-    print(etl)
+    # etl = Opto(port=etl.port)
+    # etl.connect()
+    # etl.mode('analog')
+    # print(etl)
 
     # CONNECT CAMERA
     # TODO: setup separate hardware initialization method within camera
@@ -345,8 +382,10 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # parameter='on': turns on light-sheet mode
     # line_time=20e-6: sets time before going to next line in sec.
     #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
-    freq = 1/(camera.expTime*1.0e-3)
-    line_time = (0.35*1/freq)/camera.Y
+    line_time = (0.35*1/camera.freq)/camera.Y
+    if line_time < 17e-6:
+        raise Exception('Line time is too small')
+        
     cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
 
     # lines_exposure: number of lines to expose at once
@@ -419,11 +458,11 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                            experiment.attenuations[wave_str])
                     )
 
-                voltages, rep_time = write_voltages(daq=daq,
-                                                    laser=laser,
-                                                    camera=camera,
-                                                    experiment=experiment,
-                                                    ch=ch)
+                voltages = write_voltages(daq=daq,
+                                          laser=laser,
+                                          camera=camera,
+                                          experiment=experiment,
+                                          ch=ch)
 
                 waveformGenerator.ao_task.write(voltages)
 
@@ -541,7 +580,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
         response = xyzStage.getMotorStatus()
 
     cam.close()
-    etl.close(soft_close=True)
+    # etl.close(soft_close=True)
     # waveformGenerator.counter_task.close()
     waveformGenerator.ao_task.close()
     xyzStage.shutDown()
@@ -557,6 +596,102 @@ def write_voltages(daq,
     n2c = daq.names_to_channels
     wave_key = list(experiment.wavelengths)[ch]  # wavelength as a string
 
+    # create waveforms
+    time = np.linspace(0, 2*math.pi, round(daq.rate/camera.freq))
+    ms2time = 2*np.pi*camera.freq/1e3 # converts values in ms to time vector units
+
+    num_samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ in one cam frame
+    samples = np.zeros((daq.num_channels, num_samples))  # create voltages array
+
+    # compute offsets from p & q
+
+    # angle in radians between galvo (x y) and image space (p q) coordiantes
+    theta = np.deg2rad(90-experiment.theta)
+
+    Xoffset = -(daq.p[wave_key]*np.cos(theta) - daq.q[wave_key]*np.sin(theta))
+    Yoffset = daq.q[wave_key]*np.cos(theta) + daq.p[wave_key]*np.sin(theta)
+
+    # configure X galvo
+    # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
+    Xsamples = daq.Xamplitude * np.sin(time - daq.Xphase * ms2time) + Xoffset
+
+    if np.amax(Xsamples) > daq.Xmax or np.amin(Xsamples) < daq.Xmin:
+        raise Exception('X voltage out of range')
+
+    samples[n2c['xgalvo'], :] = Xsamples 	# add X samples to samples
+
+
+    # configure Y galvo
+    # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
+    Ysamples = daq.Yamplitude * np.sin(time - daq.Yphase * ms2time) + Yoffset
+
+    if np.amax(Ysamples) > daq.Ymax or np.amin(Ysamples) < daq.Ymin:
+        raise Exception('Y voltage out of range')
+
+    samples[n2c['ygalvo'], :] =  Ysamples  # appends second row to samples for Y galvo
+
+
+    # configure Voice Coil
+    # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
+    VCsamples = daq.VCamplitude[wave_key] * np.sin(time - daq.VCphase * ms2time) + daq.VCoffset[wave_key]
+
+    if np.amax(VCsamples) > daq.VCmax or np.amin(VCsamples) < daq.VCmin:
+        raise Exception('VC voltage out of range')
+
+    samples[n2c['vc'], :] = VCsamples # appends third row to samples for VC
+
+
+    # configure Trigger
+    # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
+
+    if (daq.Tdelay < 0 or
+        daq.Tduration < 0 or
+        daq.Tdelay + daq.Tduration > 1.0/camera.freq * 1e3):
+        raise Exception('Invalid trigger timing (delay or duration)')
+
+    Tsamples = daq.Tamplitude*(np.heaviside(time - daq.Tdelay * ms2time, 1) - 
+        np.heaviside(time - daq.Tdelay * ms2time - daq.Tduration * ms2time, 1))
+
+    if np.amax(Tsamples) > daq.Tmax or np.amin(Tsamples) < daq.Tmin:
+        raise Exception('Trigger voltage out of range')
+
+    samples[n2c['trigger'], :] = Tsamples # appends fourth row to samples for Trigger
+
+    # configure laser
+    if laser.strobing == 'ON':
+        print('strobing on')
+        samples[n2c[wave_key], :] = 5.0*(np.heaviside(time - daq.Tdelay * ms2time, 1) - 
+            np.heaviside(time - daq.Tdelay * ms2time - 0.35*camera.expTime * ms2time, 1))
+        samples[n2c[wave_key], 0] = 0.0
+        samples[n2c[wave_key], -1] = 0.0
+    elif laser.strobing == 'OFF':
+        print('strobing off')
+        print(wave_key)
+        print(n2c[wave_key])
+        samples[n2c[wave_key], :] = 5.0
+    else:
+        raise Exception('laser.strobing invalid, must be \'ON\' or \'OFF\'')
+
+
+    # double check voltages are within range
+    assert np.max(samples[n2c['xgalvo'], :]) <= daq.Xmax
+    assert np.min(samples[n2c['xgalvo'], :]) >= daq.Xmin
+    assert np.max(samples[n2c['ygalvo'], :]) <= daq.Ymax
+    assert np.min(samples[n2c['ygalvo'], :]) >= daq.Ymin
+    assert np.max(samples[n2c['vc'], :]) <= daq.VCmax
+    assert np.min(samples[n2c['vc'], :]) >= daq.VCmin
+    assert np.max(samples[n2c['trigger'], :]) <= daq.Tmax
+    assert np.min(samples[n2c['trigger'], :]) >= daq.Tmin
+    assert np.max(samples[n2c[wave_key], :]) <= 5.0
+    assert np.min(samples[n2c[wave_key], :]) >= 0.0
+    assert(abs(camera.freq) <= daq.freq_max)
+
+    for c in range(13):
+        plt.plot(samples[c, :])
+        #plt.legend(loc='upper right')
+    plt.show()
+
+    ''' OLD VERSION
     # convert max / min / peak-to-peak (DAQExpress convention)
     # to offset / amplitude
     xoffset = (daq.xmax[wave_key] + daq.xmin[wave_key]) / 2
@@ -626,27 +761,11 @@ def write_voltages(daq,
         snap_back[samples - (roll_samples + on_samples - galvo_samples +
                   buffer_samples):samples]
 
-    # Laser modulation:
-    if laser.strobing == 'ON':
-        voltages[n2c[wave_key],
-                 roll_samples + 50:roll_samples + on_samples - 50] = 5.0
-        voltages[n2c[wave_key], 0] = 0.0
-        voltages[n2c[wave_key], -1] = 0.0
-    elif laser.strobing == 'OFF':
-        voltages[n2c[wave_key], :] = 5.0
-    else:
-        raise Exception('laser.strobing invalid, must be \'ON\' or \'OFF\'')
-
     # ETL scanning:
     voltages[n2c['etl'], :] = eoffset
 
     # NI playing:
     voltages[n2c['daq_active'], :] = 3.0
-
-    # for c in range(12):
-    # 	plt.plot(voltages[c, :])
-    # 	plt.legend(loc='upper right')
-    # plt.show()
 
     # Check final voltages for sanity
     # Assert that voltages are safe
@@ -661,10 +780,12 @@ def write_voltages(daq,
     assert np.min(voltages[n2c['daq_active'], :]) >= 0.0
     assert np.max(voltages[n2c[wave_key], :]) <= 5.0
     assert np.min(voltages[n2c[wave_key], :]) >= 0.0
-
+    '''
     print('wrote voltages')
+    input()
+    raise Exception('stopping')
 
-    return voltages, (camera.expTime/1e3-2*roll_time)*1000
+    #return samples
 
 
 def zero_voltages(daq, camera):

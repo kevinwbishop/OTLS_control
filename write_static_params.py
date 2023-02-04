@@ -29,17 +29,28 @@ static_params_write = {
         'names_to_channels': {
             'xgalvo': 0,
             'ygalvo': 1,
-            'camera2_ex': 2,
+            # 'camera2_ex': 2,
             'camera2_aq': 3,
             'camera0_ex': 4,
             'camera0_aq': 5,
-            'etl': 6,
+            # 'etl': 6,
+            'vc': 6,
+            'trigger': 2,
             'daq_active': 7,
             '405': 8,
             '488': 9,
             '561': 11,
             '638': 12
-            }
+            },
+        'freq_max': 50,
+		'Xmax': 10,
+		'Xmin': -10,
+		'Ymax': 10,
+		'Ymin': -10,
+		'VCmax': 5,
+		'VCmin': -5,
+		'Tmax': 3.3,
+		'Tmin': 0
     },
     'laser': {
         'port': 'COM4',  # e.g. 'COM1'
