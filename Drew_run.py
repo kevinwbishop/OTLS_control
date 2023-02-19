@@ -28,7 +28,7 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'LB_OTLS4_eosin_sample_2-6-23'  # file name
+experiment_dict['fname'] = 'Drew_whole_mouse_brain_drug2_01_20_23'  # file name
 
 # ## If imaging on hivex puck with pre-defined well positions, indicate which wells to image below.
 ## If not, just comment out the two lines below
@@ -36,12 +36,12 @@ experiment_dict['fname'] = 'LB_OTLS4_eosin_sample_2-6-23'  # file name
 # image_wells['well_numbers'] = [3]
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = -5.07 # mm
-experiment_dict['xMax'] = -3.07  # mm
-experiment_dict['yMin'] = 5.4  # mm
-experiment_dict['yMax'] = 10.3  # mm
-experiment_dict['zMin'] = 0.19  # mm
-experiment_dict['zMax'] = 0.28  # mm
+experiment_dict['xMin'] = 0.92 # mm
+experiment_dict['xMax'] = 1.49  # mm
+experiment_dict['yMin'] = -2.49  # mm
+experiment_dict['yMax'] = -1.84  # mm
+experiment_dict['zMin'] = -0.04  # mm
+experiment_dict['zMax'] = 0.30  # mm
 
 
 # Uncomment this line to force no filter on 638 channel (i.e. reflective beads)
@@ -53,11 +53,11 @@ experiment_dict['zMax'] = 0.28  # mm
 # set experiment wavelenths here, current in mA
 ################################################
 
-experiment_dict['wavelengths'] = {'561': 1550} ##Lab convention for H&E analog: ch0 = TOPRO, ch1 = eosin
+experiment_dict['wavelengths'] = {'405': 60.00,'488': 40.00, '561': 1900.00} ##Lab convention for H&E analog: ch0 = TOPRO, ch1 = eosin
 
 experiment_dict['attenuations'] = {'405': 1000, # This value should be 2x greater than the max depth in z
                                    '488': 1000, ##To keep the power as constant as possible thru depth, maket hese values large
-                                   '561': 15,
+                                   '561': 1000,
                                    '638': 1000}
 
 
@@ -90,10 +90,10 @@ daq_dict['ymin'] = {'405': -2.000,
                     '638': -2.000}
 
 # >>>>>>>  Adjust ymax  <<<<<<<
-daq_dict['ymax'] = {'405': 2.3950,
-                    '488': 2.4500, #4140,
-                    '561': 2.4450,
-                    '638': 2.4400}#110}
+daq_dict['ymax'] = {'405': 2.4200,
+                    '488': 2.4250, #4140,
+                    '561': 2.4250,
+                    '638': 2.4440}#110}
 
 daq_dict['ypp'] = {'405': 0.024,
                    '488': 0.024,
@@ -102,10 +102,10 @@ daq_dict['ypp'] = {'405': 0.024,
 
 # ETL
 # >>>>>>>  Adjust ETL  <<<<<<<
-daq_dict['econst'] = {'405': 3.0500,
-                      '488': 2.4000,
-                      '561': 2.3750,
-                      '638': 2.5500}
+daq_dict['econst'] = {'405': 2.4500,
+                      '488': 2.4500,
+                      '561': 2.4500,
+                      '638': 2.4500}
 
 
 # construct objects

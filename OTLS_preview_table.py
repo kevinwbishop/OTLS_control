@@ -22,8 +22,8 @@ class MainWindow(QMainWindow):
         self.wheel_dict = self.static_params['wheel']
         self.min_currents = self.laser_dict['min_currents']
         self.max_currents = self.laser_dict['max_currents']
-        self.ymax = 1.8000
-        self.eoffset = 0.9000
+        self.ymax = 2.4250
+        self.eoffset = 2.45
         self.current_405 = self.min_currents['405'] # replicate this for other lasers
         self.current_488 = self.min_currents['488']
         self.current_561 = self.min_currents['561']

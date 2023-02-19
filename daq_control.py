@@ -7,7 +7,7 @@ import numpy
 
 
 class Daq(object):
-    def __init__(self, ymax=2.1740, eoffset=2.5000):
+    def __init__(self, ymax=2.4350, eoffset=2.5000):
         with open('static_params.json', 'r') as read_file:
             static_params = json.load(read_file)
         self.daq = static_params['daq']
@@ -68,10 +68,10 @@ class Daq(object):
 
     def create_voltages_galvo(self):
         xmax = 5.0000
-        xmin = -5.0000
-        xpp = 7.000
+        xmin = -5.1500
+        xpp = 1.2000
         ymin = -2.0000
-        ypp = 0.0000
+        ypp = 0.024
         xoffset = (xmax + xmin) / 2
         xamplitude = xpp / 2
         yoffset = (self.ymax + ymin) / 2
