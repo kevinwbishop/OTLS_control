@@ -12,10 +12,10 @@
     },
     "experiment": {
         "overlapZ": 30,
-        "overlapY": 30,
+        "overlapY": 200,
         "theta": 45.0,
         "xWidth": 0.373,
-        "yWidth": 0.752714,
+        "yWidth": 0.6893,
         "zWidth": 0.05633085985009193
     },
     "daq": {
@@ -52,7 +52,7 @@
             "561": 50.0,
             "638": 50.0
         },
-        "skyra_system_name": "OTLS 4",
+        "skyra_system_name": "OTLS 4 NODO",
         "use_LUT": false,
         "min_currents": {
             "405": 36.0,
@@ -87,5 +87,8 @@
         "model": "ms2000",
         "port": "COM13",
         "rate": 9600
+    },
+        "image_wells": {
+    "option": "no"
     }
 }
