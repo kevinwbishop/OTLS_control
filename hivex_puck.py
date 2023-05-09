@@ -10,8 +10,8 @@ def well(well_number, experiment_dict):
 	experiment_dict.xMax = -8.75  # mm
 	experiment_dict.yMin = 4.2  # mm
 	experiment_dict.yMax = 8.00 # mm
-	experiment_dict.zMin = 0.41  # mm
-	experiment_dict.zMax = 0.41 + 0.60 # mm
+	experiment_dict.zMin = 0.49  # mm 0.50
+	experiment_dict.zMax = 0.49 + 0.60 # mm 0.50
 
 	## Calculate position
 	experiment_dict.yMin -= 8*(column - 1) # mm

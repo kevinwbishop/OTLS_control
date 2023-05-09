@@ -23,6 +23,8 @@ from hardware.opto import Opto
 import time as timer
 import scan3D_image_wells
 import shutil
+import scipy
+import scipy.interpolate
 from shutil import ignore_patterns
 
 
@@ -219,9 +221,9 @@ class laser(object):
             # highest_current = experiment.wavelengths[ch] / \
             #     np.exp(-scan.zTiles * experiment.zWidth / experiment.attenuations[ch])
 
-            print(highest_current)
-            print(scan.zTiles)
-            print(experiment.zWidth)
+            print("highest current: " + str(highest_current))
+            print("ztiles: " + str(scan.zTiles))
+            print("zwidth: " + str(experiment.zWidth))
 
             maxCurrent = self.max_currents[ch]
             if highest_current > maxCurrent:
@@ -370,7 +372,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
 
     cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
     # possibly change mode to ring buffer??
-
     # IMAGING LOOP
 
     ring_buffer = np.zeros((session.blockSize,
@@ -386,7 +387,6 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
     start_time = timer.time()
 
     xPos = session.xLength/2.0 - session.xOff
-
     for j in range(session.zTiles):
 
         zPos = j*experiment.zWidth + session.zOff
@@ -417,21 +417,21 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
                 fWheel.setPosition(wheel.names_to_channels[wave_str])
 
                 # START SCAN
-
                 skyraLaser.setModulationHighCurrent(
                     laser.names_to_channels[wave_str],
-                    experiment.wavelengths[wave_str] /
+                    (experiment.wavelengths[wave_str] - laser.min_currents[wave_str]) /
                     np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[wave_str])
+                           experiment.attenuations[wave_str]) + laser.min_currents[wave_str]
                     )
                 print('wavelength = ' + str(laser.names_to_channels[wave_str]))
-                print('current = ' + str(experiment.wavelengths[wave_str] /
+                print('current = ' + str((experiment.wavelengths[wave_str] - laser.min_currents[wave_str]) /
                     np.exp(-j*experiment.zWidth /
-                           experiment.attenuations[wave_str])))
+                           experiment.attenuations[wave_str]) + laser.min_currents[wave_str]))
 
                 voltages, rep_time = write_voltages(daq=daq,
                                                     laser=laser,
                                                     camera=camera,
+                                                    session = session,
                                                     experiment=experiment,
                                                     ch=ch)
 
@@ -562,6 +562,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage, image_wells):
 def write_voltages(daq,
                    laser,
                    camera,
+                   session,
                    experiment,
                    ch):
 
@@ -579,6 +580,20 @@ def write_voltages(daq,
 
     samples = int(daq.rate*camera.expTime/1e3)  # number of samples for DAQ
 
+
+
+    voltages = np.zeros((daq.num_channels, samples))  # create voltages array
+
+    ## Custom waveform
+    time, x, wavexmin, wavexmax, y, waveymin, waveymax, nn = get_original_sawtooth(daq, camera, wave_key)
+    dwell_time_new = np.load('C://Users//AERB//Desktop//Lindsey//troubleshooting//dwell_time_new_v3.npy')
+    x_new, y_new = get_custom_waveform(time, x, wavexmin, wavexmax, y, waveymin, waveymax, nn, dwell_time_new)
+    voltages[n2c['xgalvo'], :] = x_new
+    voltages[n2c['ygalvo'], :] = y_new
+    print('set custom waveform')
+    ## End code for custom waveform
+
+    print(samples)
     line_time = 9.76/1.0e6  # seconds, constant for pco.edge camera
     roll_time = line_time*camera.Y/2.0  # chip rolling time in seconds
     roll_samples = int(np.floor(roll_time*daq.rate))  # rolling samples
@@ -592,51 +607,52 @@ def write_voltages(daq,
     buffer_time = 50/1.0e6
     buffer_samples = int(np.floor(buffer_time*daq.rate))
 
-    voltages = np.zeros((daq.num_channels, samples))  # create voltages array
+    # voltages = np.zeros((daq.num_channels, samples))  # create voltages array
 
-    # X Galvo scanning:
-    period_samples = np.linspace(0,
-                                 2 * math.pi, on_samples + 2 * buffer_samples)
-    snap_back = np.linspace(xoffset + xamplitude,
-                            xoffset - xamplitude,
-                            samples - on_samples - 2 * buffer_samples)
-    voltages[n2c['xgalvo'], :] = xoffset
-    voltages[n2c['xgalvo'],
-             roll_samples - galvo_samples - buffer_samples:
-             roll_samples + on_samples - galvo_samples + buffer_samples] = \
-        -2 * (xamplitude / math.pi) * \
-        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + xoffset
-    voltages[n2c['xgalvo'],
-             roll_samples + on_samples - galvo_samples + buffer_samples:
-             samples] = \
-        snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
-                  buffer_samples)]
-    voltages[n2c['xgalvo'],
-             0:roll_samples - galvo_samples - buffer_samples] = \
-        snap_back[samples - (roll_samples + on_samples - galvo_samples +
-                  buffer_samples):samples]
 
-    # Y Galvo scanning:
-    period_samples = np.linspace(0,
-                                 2 * math.pi, on_samples + 2 * buffer_samples)
-    snap_back = np.linspace(yoffset + yamplitude,
-                            yoffset - yamplitude,
-                            samples - on_samples - 2 * buffer_samples)
-    voltages[n2c['ygalvo'], :] = yoffset
-    voltages[n2c['ygalvo'],
-             roll_samples - galvo_samples - buffer_samples:
-             roll_samples + on_samples-galvo_samples + buffer_samples] = \
-        -2 * (yamplitude / math.pi) * \
-        np.arctan(1.0 / (np.tan(period_samples / 2.0))) + yoffset
-    voltages[n2c['ygalvo'],
-             roll_samples + on_samples - galvo_samples + buffer_samples:
-             samples] = \
-        snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
-                  buffer_samples)]
-    voltages[n2c['ygalvo'],
-             0:roll_samples - galvo_samples - buffer_samples] = \
-        snap_back[samples - (roll_samples + on_samples - galvo_samples +
-                  buffer_samples):samples]
+    # # X Galvo scanning:
+    # period_samples = np.linspace(0,
+    #                              2 * math.pi, on_samples + 2 * buffer_samples)
+    # snap_back = np.linspace(xoffset + xamplitude,
+    #                         xoffset - xamplitude,
+    #                         samples - on_samples - 2 * buffer_samples)
+    # voltages[n2c['xgalvo'], :] = xoffset
+    # voltages[n2c['xgalvo'],
+    #          roll_samples - galvo_samples - buffer_samples:
+    #          roll_samples + on_samples - galvo_samples + buffer_samples] = \
+    #     -2 * (xamplitude / math.pi) * \
+    #     np.arctan(1.0 / (np.tan(period_samples / 2.0))) + xoffset
+    # voltages[n2c['xgalvo'],
+    #          roll_samples + on_samples - galvo_samples + buffer_samples:
+    #          samples] = \
+    #     snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
+    #               buffer_samples)]
+    # voltages[n2c['xgalvo'],
+    #          0:roll_samples - galvo_samples - buffer_samples] = \
+    #     snap_back[samples - (roll_samples + on_samples - galvo_samples +
+    #               buffer_samples):samples]
+
+    # # Y Galvo scanning:
+    # period_samples = np.linspace(0,
+    #                              2 * math.pi, on_samples + 2 * buffer_samples)
+    # snap_back = np.linspace(yoffset + yamplitude,
+    #                         yoffset - yamplitude,
+    #                         samples - on_samples - 2 * buffer_samples)
+    # voltages[n2c['ygalvo'], :] = yoffset
+    # voltages[n2c['ygalvo'],
+    #          roll_samples - galvo_samples - buffer_samples:
+    #          roll_samples + on_samples-galvo_samples + buffer_samples] = \
+    #     -2 * (yamplitude / math.pi) * \
+    #     np.arctan(1.0 / (np.tan(period_samples / 2.0))) + yoffset
+    # voltages[n2c['ygalvo'],
+    #          roll_samples + on_samples - galvo_samples + buffer_samples:
+    #          samples] = \
+    #     snap_back[0:samples - (roll_samples + on_samples - galvo_samples +
+    #               buffer_samples)]
+    # voltages[n2c['ygalvo'],
+    #          0:roll_samples - galvo_samples - buffer_samples] = \
+    #     snap_back[samples - (roll_samples + on_samples - galvo_samples +
+    #               buffer_samples):samples]
 
     # Laser modulation:
     if laser.strobing == 'ON':
@@ -677,6 +693,65 @@ def write_voltages(daq,
     print('wrote voltages')
 
     return voltages, (camera.expTime/1e3-2*roll_time)*1000
+
+def get_original_sawtooth(daq, camera, wave_key):
+    # convert max / min / peak-to-peak (DAQExpress convention)
+    # to offset / amplitude
+    xoffset = (daq.xmax[wave_key] + daq.xmin[wave_key]) / 2
+    xamplitude = daq.xpp[wave_key] / 2
+    xmin = xoffset - xamplitude
+    xmax = xoffset + xamplitude
+    fov_V = .63 + .28
+    yoffset = (daq.ymax[wave_key] + daq.ymin[wave_key]) / 2
+    yamplitude = daq.ypp[wave_key] / 2
+    ymin = yoffset - yamplitude
+    ymax = yoffset + yamplitude
+    eoffset = daq.econst[wave_key]
+
+    rate = daq.rate 
+    exptime = camera.expTime #ms
+    samples = int(rate*exptime/1e3)  # number of samples for DAQ. 
+    samples_halfcycle = samples/2
+    halfcycle = samples_halfcycle/rate ## Length of a cycle, seconds
+
+    n = np.arange(samples_halfcycle) # Indices of all samples in one cycle
+    x = xmin + n*(xmax - xmin)/(halfcycle*rate) ## Equation for x position (in units of V)
+    y = ymin + n*(ymax - ymin)/(halfcycle*rate)
+    dt = halfcycle/len(n) ## Number of seconds each sample gets 
+    dwell_time = dt*np.ones(len(n))
+
+    time = np.zeros((len(n)))
+    for el in range(1, len(n)):
+        time[el] = time[el - 1] + dwell_time[el]
+        
+    return time, x, xmin, xmax, y, ymin, ymax, n
+
+def get_custom_waveform(time, x, xmin, xmax, y, ymin, ymax, n, dwell_time_new):
+    time_new = np.zeros((len(n)))
+    for el in range(1, len(n)):
+        time_new[el] = time_new[el - 1] + dwell_time_new[el]
+    total_time_el = np.cumsum(dwell_time_new)
+    total_time_el -= np.min(total_time_el)
+
+    x_ = x
+    y_ = y
+    if total_time_el[-1] < time[-1]:
+        total_time_el = np.append(total_time_el, time[-1])
+        x_ = np.append(x, xmax)
+        y_ = np.append(y, ymax)
+        
+    interp = scipy.interpolate.interp1d(total_time_el, x_)
+    interpY = scipy.interpolate.interp1d(total_time_el, y_)
+
+    x_new = interp(time)
+    y_new = interpY(time)
+
+    x_new = np.append(x_new, np.flip(x_new))
+    y_new = np.append(y_new, np.flip(y_new))
+    
+    return x_new, y_new
+
+
 
 
 def zero_voltages(daq, camera):

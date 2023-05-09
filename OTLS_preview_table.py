@@ -7,14 +7,17 @@ from daq_control import Daq
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QDoubleSpinBox, QGridLayout, QWidget, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QMessageBox, QAction)
 from PyQt5.QtCore import Qt
 import hardware.fw102c as fw102c
+import numpy as np
+from subprocess import Popen
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        p = Popen('run_move2well_GUI.bat')
+        
         self.setWindowTitle("OTLS Preview")
-
         # Load and define parameters
         with open('static_params.json', 'r') as read_file:
             self.static_params = json.load(read_file)
@@ -22,7 +25,7 @@ class MainWindow(QMainWindow):
         self.wheel_dict = self.static_params['wheel']
         self.min_currents = self.laser_dict['min_currents']
         self.max_currents = self.laser_dict['max_currents']
-        self.ymax = 2.4250
+        self.ymax = 0.25
         self.eoffset = 2.45
 
         ## Load default ETL positions for different wavelengths
@@ -206,8 +209,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(max_label_638, 5,3)
 ###################################
 
+###################################
         # ymax input
-        placeholder = QLabel()
+        placeholder = QLabel() ## Adds space between current limit row and ymax row
         layout.addWidget(placeholder, 6,1)
         label_ymax = QLabel("Adjust Ymax: ")
         label_ymax.setAlignment(Qt.AlignCenter)

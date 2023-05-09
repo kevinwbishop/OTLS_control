@@ -19,7 +19,7 @@ image_wells = static_params['image_wells'] ## Default option for this is "no"
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['expTime'] = 10.0  # ms 
+camera_dict['expTime'] = 10.0  # ms
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
 camera_dict['quantSigma'] = {'405': 1.0,
@@ -29,23 +29,22 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'A'
-experiment_dict['fname'] = 'LB_OTLS4_NODO_1-15-23'  # file name
+experiment_dict['fname'] = 'OTLS4_NODO_5-8-23'  # file name
 
 # ## If imaging on hivex puck with pre-defined well positions, indicate which wells to image below.
 ## If not, just comment out the three lines below
 image_wells['option'] = 'yes'
-image_wells['well_numbers'] = [1,9] ## This must be in brackets even if only imaging 1 well
-image_wells['well_ids'] = 'AA3','CC1'  # (Optional) append the ID of each tissue to the filename for each well, if doing multiple wells
+image_wells['well_numbers'] = [7] ## This must be in brackets even if only imaging 1 well
+image_wells['well_ids'] = 'EAM047'  # (Optional) append the ID of each tissue to the filename for each well, if doing multiple wells
 
 
 # # # ROI PARAMETERS
-# experiment_dict['xMin'] = -4.26 # mm
-# experiment_dict['xMax'] = -3.35  # mm
-# experiment_dict['yMin'] = 5.06  # mm
-# experiment_dict['yMax'] = 5.50 # mm
-# experiment_dict['zMin'] = 0.41  # mm
-# experiment_dict['zMax'] = 0.91  # mm
-
+# experiment_dict['xMin'] = 1.54 # mm
+# experiment_dict['xMax'] = 5.27  # mm
+# experiment_dict['yMin'] = -5.22  # mm
+# experiment_dict['yMax'] = -4.12 # mm
+# experiment_dict['zMin'] = 0.03  # mm
+# experiment_dict['zMax'] = 0.85  # mm
 
 # Uncomment this line to force no filter on 638 channel (i.e. reflective beads)
 # otherwise leave this line commented out
@@ -56,12 +55,12 @@ image_wells['well_ids'] = 'AA3','CC1'  # (Optional) append the ID of each tissue
 # set experiment wavelenths here, current in mA
 ################################################
 
-experiment_dict['wavelengths'] = {'638': 115.00, '561': 1800.00} ##Lab convention for H&E analog: ch0 = TOPRO, ch1 = eosin
+experiment_dict['wavelengths'] = {'638':109.3, '561':1550} ##Lab convention for H&E analog: ch0 = TOPRO, ch1 = eosin
 
 experiment_dict['attenuations'] = {'405': 1000, # This value should be 2x greater than the max depth in z
                                    '488': 1000, 
-                                   '561': 1000,
-                                   '638': 1000}
+                                   '561': 3.5,
+                                   '638': 0.40} 
 
 
 
@@ -72,41 +71,41 @@ experiment_dict['attenuations'] = {'405': 1000, # This value should be 2x greate
 
 # X Galvo
 daq_dict['xmin'] = {'405': -5.3350,
-                    '488': -5.3350,
-                    '561': -5.3350,
-                    '638': -5.3350}
+                    '488': -0.635,
+                    '561': -0.635,
+                    '638': -0.635}
 
 daq_dict['xmax'] = {'405': 5.0000,
-                    '488': 5.0000,
-                    '561': 5.0000,
-                    '638': 5.0000}
+                    '488': .28,
+                    '561': .28,
+                    '638': .28}
 
-daq_dict['xpp'] = {'405': 0.9500,
-                   '488': 0.9500,
-                   '561': 0.9500,
-                   '638': 0.9500}
+daq_dict['xpp'] = {'405': 1.1, #0.9400,
+                   '488': 1.1, #0.9400,
+                   '561': 1.1, #0.9400,
+                   '638': 1.1} #0.9400}
 
 # Y Galvo
 daq_dict['ymin'] = {'405': -2.000,
-                    '488': -2.000,
-                    '561': -2.000,
-                    '638': -2.000}
+                    '488': .20,
+                    '561': .20,
+                    '638': .20}
 
 # >>>>>>>  Adjust ymax  <<<<<<<
 daq_dict['ymax'] = {'405': 2.44,
-                    '488': 2.44,
-                    '561': 2.440,
-                    '638': 2.435}
+                    '488': .23,
+                    '561': .270,
+                    '638': .265}
 
-daq_dict['ypp'] = {'405': 0.019,
-                   '488': 0.019,
-                   '561': 0.019,
-                   '638': 0.019}
+daq_dict['ypp'] = {'405': 0.0198,
+                   '488': 0.0198,
+                   '561': 0.0198,
+                   '638': 0.0198}
 
 # ETL
 # >>>>>>>  Adjust ETL  <<<<<<<
 daq_dict['econst'] = {'405': 2.2500,
-                      '488': 2.3000,
+                      '488': 2.3500,
                       '561': 2.3750,
                       '638': 2.5500}
 

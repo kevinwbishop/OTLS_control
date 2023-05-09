@@ -1,0 +1,6 @@
+import move2well
+stage = move2well.stage()
+xyzStage = stage.init_stage()
+
+well = move2well.register_well(1)
+stage.go_to_well(xyzStage, well)

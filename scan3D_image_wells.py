@@ -442,13 +442,16 @@ def scan3D_image_wells(experiment, camera, daq, laser, wheel, etl, stage, image_
                         fWheel.setPosition(wheel.names_to_channels[wave_str])
 
                         # START SCAN
-
                         skyraLaser.setModulationHighCurrent(
                             laser.names_to_channels[wave_str],
-                            experiment.wavelengths[wave_str] /
+                            (experiment.wavelengths[wave_str] - laser.min_currents[wave_str]) /
                             np.exp(-j*experiment.zWidth /
-                                   experiment.attenuations[wave_str])
+                                   experiment.attenuations[wave_str]) + laser.min_currents[wave_str]
                             )
+                        print('wavelength = ' + str(laser.names_to_channels[wave_str]))
+                        print('current = ' + str((experiment.wavelengths[wave_str] - laser.min_currents[wave_str]) /
+                            np.exp(-j*experiment.zWidth /
+                                   experiment.attenuations[wave_str]) + laser.min_currents[wave_str]))
 
                         voltages, rep_time = write_voltages(daq=daq,
                                                             laser=laser,

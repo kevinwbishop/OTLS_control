@@ -18,8 +18,9 @@ from scipy import signal
 
 class waveformGenerator(object):
 
-	def __init__(self, daq, camera, session, triggered = True):
-		self.samples = int(session.nFrames*daq.rate*camera.expTime/1000) # number of samples for DAQ
+	def __init__(self, daq, triggered = False):#, camera, session, triggered = True):
+		self.samples = 40000000
+		# self.samples = int(session.nFrames*daq.rate*camera.expTime/1000) # number of samples for DAQ
 
 		self.ao_task = nidaqmx.Task("ao0")
 
