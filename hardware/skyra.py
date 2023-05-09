@@ -177,7 +177,7 @@ class Skyra(RS232.RS232):
         print('Setting high current for wavelength ' + str(wavelength) +
               ' to ' + str(current) + ' mA')
         self.sendCommand(str(wavelength) + "smc " + str(current))
-        # self.waitResponse()
+        self.waitResponse()
 
     def setModulationLowCurrent(self, wavelength, current):
         """
