@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
 um_per_px = 0.376  # microns
@@ -6,7 +7,7 @@ um_per_px = 0.376  # microns
 static_params_write = {
     'camera': {
         'number': 0,  # int e.g. 0
-        'Y': 2044,  # frame size in pixels
+        'Y': 1024,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
         'shutterMode': 'UNUSED',
@@ -30,7 +31,7 @@ static_params_write = {
             'xgalvo': 0,
             'ygalvo': 1,
             # 'camera2_ex': 2,
-            'camera2_aq': 3,
+            # 'camera2_aq': 3,
             'camera0_ex': 4,
             'camera0_aq': 5,
             # 'etl': 6,
@@ -40,7 +41,7 @@ static_params_write = {
             '405': 8,
             '488': 9,
             '561': 11,
-            '638': 12
+            '638': 3
             },
         'freq_max': 50,
 		'Xmax': 10,
@@ -90,8 +91,8 @@ static_params_write = {
         'names_to_channels': {
             '405': 1,
             '488': 2,
-            '561': 3,
-            '638': 4,
+            '561': 4,
+            '638': 5,
             '660': 5,
             'none': 6
             }
@@ -112,7 +113,7 @@ static_params_write['experiment']['yWidth'] = \
     (static_params_write['camera']['X'] -
      static_params_write['experiment']['overlapY']) * um_per_px / 1000  # mm
 static_params_write['experiment']['zWidth'] = \
-    (static_params_write['camera']['Y'] / 1.4142 -
+    (static_params_write['camera']['Y'] * np.cos(np.deg2rad(static_params_write['experiment']['theta'])) -
      static_params_write['experiment']['overlapZ']) * um_per_px / 1000  # mm
 
 # Write JSON
