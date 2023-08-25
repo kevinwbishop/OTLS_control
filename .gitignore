@@ -16,3 +16,7 @@ local_files/*
 
 # ignore VS Code settings
 .vscode/*
+
+# ignore jupyter checkpoints
+
+.ipynb_checkpoints/*
