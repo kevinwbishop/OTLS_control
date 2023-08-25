@@ -1,5 +1,7 @@
 import json
 import numpy as np
+import os
+from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
 um_per_px = 0.376  # microns
@@ -116,6 +118,17 @@ static_params_write['experiment']['zWidth'] = \
     (static_params_write['camera']['Y'] * np.cos(np.deg2rad(static_params_write['experiment']['theta'])) -
      static_params_write['experiment']['overlapZ']) * um_per_px / 1000  # mm
 
+filename = 'static_params.json'
+
+# Make JSON writable
+try:
+    os.chmod(filename, S_IWUSR|S_IREAD)
+except Exception: 
+    pass
+
 # Write JSON
-with open('static_params.json', 'w') as write_file:
+with open(filename, 'w') as write_file:
     json.dump(static_params_write, write_file, indent=4)
+
+# Make JSON read only
+os.chmod(filename, S_IREAD|S_IRGRP|S_IROTH)
