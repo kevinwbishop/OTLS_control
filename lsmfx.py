@@ -21,6 +21,7 @@ import hardware.skyra as skyra
 from hardware.opto import Opto
 import time as timer
 from matplotlib import pyplot as plt
+import json
 
 
 class experiment(object):
@@ -383,6 +384,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # line_time=20e-6: sets time before going to next line in sec.
     #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
     line_time = (0.35*1/camera.freq)/camera.Y
+    print('Frequency is:', camera.freq)
+    print('Line time is:', line_time)
     if line_time < 17e-6:
         raise Exception('Line time is too small')
         
@@ -401,8 +404,18 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # function, because the driver layer must be informed about any changes in readout format to successfully rearrange the 
     # image data.
 
+    print(cam.sdk.get_cmos_line_exposure_delay())
+    print(cam.sdk.get_cmos_line_timing())
+    print(cam.sdk.get_interface_output_format(interface='edge'))
+
     cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
 
+    # log camera settings
+    cam_settings = cam.sdk.get_camera_description()
+    with open('./camera_description_lsmfx.json', 'w') as write_file:
+        json.dump(cam_settings, write_file, indent=4)
+
+        
     # IMAGING LOOP
 
     ring_buffer = np.zeros((session.blockSize,
@@ -500,6 +513,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                 # for some reason code frequently (but not always)
                 # gets stuck on cam.wait_for_next_image(num_acquired),
                 # like cam is a frame or two ahead of code
+
                 while num_acquired < session.nFrames - 100:
 
                     # print('you\'ve got an image!', num_acquired, 'of',
@@ -512,6 +526,12 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                               ' - ',
                               str(num_acquired))
                         print('Tile: ' + str(tile))
+                        
+                        # show current image
+                        # plt.imshow(ring_buffer[num_acquired_counter-1],'gray',interpolation='nearest',vmin=0,vmax=2000)
+                        # plt.show()
+                        # input()
+
                         h5write(dest,
                                 ring_buffer,
                                 tile + session.zTiles*session.yTiles*ch,
@@ -537,7 +557,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                               str(num_acquired_previous),
                               ' - ',
                               str(session.nFrames))
-
+                        
                         h5write(dest,
                                 ring_buffer[0:num_acquired_counter+1],
                                 tile + session.zTiles*session.yTiles*ch,
@@ -686,10 +706,10 @@ def write_voltages(daq,
     assert np.min(samples[n2c[wave_key], :]) >= 0.0
     assert(abs(camera.freq) <= daq.freq_max)
 
-    for c in range(13):
-        plt.plot(samples[c, :])
-        #plt.legend(loc='upper right')
-    plt.show()
+    # for c in range(13):
+    #     plt.plot(samples[c, :])
+    #     #plt.legend(loc='upper right')
+    # plt.show()
 
     ''' OLD VERSION
     # convert max / min / peak-to-peak (DAQExpress convention)
@@ -782,10 +802,8 @@ def write_voltages(daq,
     assert np.min(voltages[n2c[wave_key], :]) >= 0.0
     '''
     print('wrote voltages')
-    input()
-    raise Exception('stopping')
 
-    #return samples
+    return samples
 
 
 def zero_voltages(daq, camera):

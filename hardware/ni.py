@@ -72,6 +72,7 @@ class waveformGenerator(object):
 		self.ao_task.timing.cfg_samp_clk_timing(rate = daq.rate, active_edge = nidaqmx.constants.Edge.RISING, sample_mode = nidaqmx.constants.AcquisitionType.FINITE, samps_per_chan = self.samples)
 		
 		if triggered:
+			print('arming trigger')
 			self.ao_task.triggers.start_trigger.retriggerable = True
 			self.ao_task.triggers.start_trigger.cfg_dig_edge_start_trig(trigger_source = '/' + daq.board + '/PFI0', trigger_edge = nidaqmx.constants.Slope.RISING)
 		else:
