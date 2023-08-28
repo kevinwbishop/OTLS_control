@@ -28,12 +28,12 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = 'Prostate_big_piece_1024_slit_50_Tdelay_36_VCamp_04_100ms_135mA'  # file name
+experiment_dict['fname'] = 'code_test'  # file name
 # experiment_dict['fname'] = 'ECi_beads_1024_slit_20_Tdelay_18_VCamp_0_VCoff_-175_50ms_120mA'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = -1.0  # mm
-experiment_dict['xMax'] = 1.0  # mm
+experiment_dict['xMin'] = -0.5  # mm
+experiment_dict['xMax'] = 0.5  # mm
 experiment_dict['yMin'] = -0.8  # mm
 experiment_dict['yMax'] = 0.8  # mm
 experiment_dict['zMin'] = 0.0  # mm
@@ -43,8 +43,8 @@ experiment_dict['zMax'] = 0.5  # mm
 # set experiment wavelengths here, current in mA
 ################################################
 
-experiment_dict['wavelengths'] = {'561': 2050.0,
-                                  '638': 135.0}
+experiment_dict['wavelengths'] = {#'561': 2050.0,
+                                  '638': 115.0}
 
 experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
                                    '488': 6,
@@ -54,26 +54,26 @@ experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater t
 daq_dict['p'] = {'405': 0.92,
                  '488': 0.92,
                  '561': 0.92,
-                 '638': 0.92}
+                 '638': 1.0}
 
 daq_dict['q'] = {'405': 2.29,
                  '488': 2.29,
                  '561': 2.285,
-                 '638': 2.283}
+                 '638': 2.573}
 
 daq_dict['VCamplitude'] = {'405': 1.15,
                            '488': 1.15,
                            '561': 0.4,
-                           '638': 0.4}
+                           '638': 0.85}
 
 daq_dict['VCoffset'] = {'405': -1.65,
                         '488': -1.65,
                         '561': -1.52,
-                        '638': -1.70}
+                        '638': -1.4}
 
 daq_dict['Tamplitude'] = 3.3
 
-daq_dict['Tdelay'] = 36
+daq_dict['Tdelay'] = 32
 
 daq_dict['Tduration'] = 5
 

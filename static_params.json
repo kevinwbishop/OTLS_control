@@ -20,7 +20,7 @@
     },
     "daq": {
         "rate": 400000.0,
-        "board": "Dev1",
+        "board": "Dev2",
         "num_channels": 32,
         "names_to_channels": {
             "xgalvo": 0,
@@ -83,7 +83,7 @@
             "405": 1,
             "488": 2,
             "561": 4,
-            "638": 5,
+            "638": 6,
             "660": 5,
             "none": 6
         }

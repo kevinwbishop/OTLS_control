@@ -27,7 +27,7 @@ static_params_write = {
     },
     'daq': {
         'rate': 4e5,  # Hz
-        'board': 'Dev1',  # board number e.g. 'Dev0'
+        'board': 'Dev2',  # board number e.g. 'Dev0'
         'num_channels': 32,  # AO channels
         'names_to_channels': {
             'xgalvo': 0,
@@ -94,7 +94,7 @@ static_params_write = {
             '405': 1,
             '488': 2,
             '561': 4,
-            '638': 5,
+            '638': 6,
             '660': 5,
             'none': 6
             }
