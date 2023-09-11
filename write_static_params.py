@@ -16,8 +16,10 @@ static_params_write = {
         'triggerMode': 'external exposure start & software trigger',
         'acquireMode': 'auto',
         'compressionMode': 1,
-        'B3Denv': ''  # name of required conda env when B3D is active.
+        'B3Denv': '', # name of required conda env when B3D is active.
                       # e.g. 'image'. Leave as empty string to allow any env.
+        'expFraction': 0.35 # 0 - 1.0. fraction of VC waveform for exposure
+                            # 0.35 is the roughly linear part of a sine wave
     },
     'experiment': {
         'overlapZ': 30,

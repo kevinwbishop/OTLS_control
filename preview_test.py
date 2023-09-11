@@ -4,12 +4,14 @@ import numpy as np
 from PIL import Image
 import scipy
 import json
-import cv2 as cv
+import cv2
 import threading
 import sys
 
 #%matplotlib notebook
 import matplotlib.pyplot as plt
+
+## note: you can run the PCO cam in external trigger if you start a record (but not light sheet)
 
 class preview(object):
 
@@ -98,14 +100,14 @@ class preview(object):
         self.pco_cam.record(number_of_images=buffer_size, mode='ring buffer')
         self.pco_cam.start()
 
-        win_size = cv.WINDOW_NORMAL        # WINDOW_NORMAL or WINDOW_AUTOSIZE
-        win_ratio = cv.WINDOW_KEEPRATIO    # WINDOW_FREERATIO or WINDOW_KEEPRATIO
-        win_GUI = cv.WINDOW_GUI_EXPANDED     # WINDOW_GUI_NORMAL or WINDOW_GUI_EXPANDED
+        win_size = cv2.WINDOW_NORMAL        # WINDOW_NORMAL or WINDOW_AUTOSIZE
+        win_ratio = cv2.WINDOW_KEEPRATIO    # WINDOW_FREERATIO or WINDOW_KEEPRATIO
+        win_GUI = cv2.WINDOW_GUI_EXPANDED     # WINDOW_GUI_NORMAL or WINDOW_GUI_EXPANDED
         win_settings = win_size | win_ratio | win_GUI
         print("{:08b}".format(win_settings))
 
-        cv.namedWindow('Live Preview', win_settings)
-        cv.setMouseCallback('Live Preview',self.get_pix_val)
+        cv2.namedWindow('Live Preview', win_settings)
+        cv2.setMouseCallback('Live Preview',self.get_pix_val)
         self.mouse_posX = 0
         self.mouse_posY = 0
         
@@ -114,7 +116,7 @@ class preview(object):
         print('starting image loop')
         while not self.stop_event.is_set():
             self.pco_cam.wait_for_next_image(num_acquired)
-            self.image = self.pco_cam.image(0)[0][2:self.camera.Y + 2,
+            image = self.pco_cam.image(0)[0][2:self.camera.Y + 2,
                                                   1024 - int(self.camera.X / 2):1024
                                                   - int(self.camera.X / 2) + self.camera.X]
             # print('You\'ve got an image!', num_acquired + 1, end='\r')
@@ -122,19 +124,34 @@ class preview(object):
             #     fig.show()
 
 
-            image_norm = cv.normalize(self.image,None,0,2**16,cv.NORM_MINMAX)
-            cv.imshow('Live Preview', image_norm)
-            cv.waitKey(1)
+            image_norm = cv2.normalize(image,None,0,2**16,cv2.NORM_MINMAX)
+
+            image_norm = self._rescale(image)
+
+            # text = 'Hi there'
+            # cv2.putText(image_norm,
+            #             text,
+            #             (50,50),
+            #             fontFace = cv2.FONT_HERSHEY_COMPLEX,
+            #             fontScale = 1.5,
+            #             color = (0,0,0),
+            #             lineType = cv2.LINE_AA)
+            cv2.imshow('Live Preview', image_norm)
+            cv2.waitKey(1)
 
             x = self.mouse_posX
             y = self.mouse_posY
 
             out_string = ('X: ' + str(x) + 
                         ' Y: ' + str(y) +
-                        ' Val: ' + str(self.image[x,y]))
-            out_string = out_string.ljust(70)
-            print(out_string, end='\r')
-            #cv.resizeWindow('custom window', 200, 200)
+                        ' Val: ' + str(image[x,y]))
+            
+            cv2.setWindowTitle('Live Preview', out_string)
+
+
+            #out_string = out_string.ljust(70)
+            #print(out_string, end='\r')
+            #cv2.resizeWindow('custom window', 200, 200)
 
             num_acquired += 1
             
@@ -143,7 +160,7 @@ class preview(object):
     def close_preview(self):
         print('Closing preview')
         self.stop_event.set()   # end thread running preview
-        cv.destroyAllWindows()
+        cv2.destroyAllWindows()
         self.pco_cam.stop()
         self.pco_cam.close()
 
@@ -153,11 +170,38 @@ class preview(object):
         # Need to check that coordiantes are not flipped etc.
 
         # TODO: figure out how to only update pix val when mouse is within the window
-        if event == cv.EVENT_MOUSEMOVE:
+        if event == cv2.EVENT_MOUSEMOVE:
             # out_string = ('X: ' + str(x) + ' Y: ' + str(y) +
             #               ' Val: ' + str(self.image[x,y]))
             # out_string = out_string.ljust(70)
             # print(out_string, end='\r')
             self.mouse_posX = x
             self.mouse_posY = y
+
+    def set_range(self,min,max):
+        self.min = min
+        self.max = max
+        self.auto_range = False
+        return
+    
+    def arange_peak(self):
+        self.min = 0
+        self.max = self.image.max()
+        self.auto_range = False
+        return
+
+    def arange_con(self):
+        return
+
+
+    def _rescale(self,image,min,max):
+        im_scaled = image
+        im_scaled[im_scaled < min] = min
+        im_scaled[im_scaled > max] = max
+
+        alpha = int(2**16/(max-min))
+        im_scaled -= min
+        im_scaled *= alpha
+
+        return im_scaled
             

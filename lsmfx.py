@@ -114,7 +114,13 @@ class scan(object):
 
     def setScanSpeed(self, xWidth, expTime):
 
-        speed = xWidth/(1.0/(1.0/((expTime + 10.0e-3)/1000.0))*1000.0)
+        speed = xWidth/(1.0/(1.0/((expTime + 10.0e-3)/1000.0))*1000.0) #exp time in ms
+        #              |    |    |(   miliseconds   )       |||       
+        #              |    |    (     seconds              )||       
+        #              |    (           Hertz                )|       
+        #              (               seconds                )
+        #        um   /                seconds                /1000 = mm/s final units  
+
         return speed
 
 
@@ -126,8 +132,8 @@ class camera(object):
         self.X = camera_dict['X']
         self.Y = camera_dict['Y']
         self.sampling = camera_dict['sampling']
-        self.expTime = camera_dict['expTime']   # ms
-        self.freq = 1/(self.expTime*1.0e-3) # Hz
+        self.freq = camera_dict['freq'] # Hz
+        self.expTime = 1000*1/self.freq   # ms
         self.slitSize = camera_dict['slitSize']
         self.triggerMode = camera_dict['triggerMode']
         self.acquireMode = camera_dict['acquireMode']
@@ -383,10 +389,11 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # parameter='on': turns on light-sheet mode
     # line_time=20e-6: sets time before going to next line in sec.
     #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
-    line_time = (0.35*1/camera.freq)/camera.Y
+    #   17 us is allowed by camera but can introduce artifacts. 20 us seems okay.
+    line_time = (camera.expFraction*1/camera.freq)/camera.Y
     print('Frequency is:', camera.freq)
     print('Line time is:', line_time)
-    if line_time < 17e-6:
+    if line_time < 20e-6:
         raise Exception('Line time is too small')
         
     cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
