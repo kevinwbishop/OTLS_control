@@ -8,7 +8,8 @@
         "triggerMode": "external exposure start & software trigger",
         "acquireMode": "auto",
         "compressionMode": 1,
-        "B3Denv": ""
+        "B3Denv": "",
+        "expFraction": 0.35
     },
     "experiment": {
         "overlapZ": 30,
@@ -83,9 +84,7 @@
             "405": 1,
             "488": 2,
             "561": 4,
-            "638": 6,
-            "660": 5,
-            "none": 6
+            "638": 5
         }
     },
     "etl": {

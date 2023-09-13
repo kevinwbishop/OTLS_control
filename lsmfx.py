@@ -22,6 +22,8 @@ from hardware.opto import Opto
 import time as timer
 from matplotlib import pyplot as plt
 import json
+import shutil
+from shutil import ignore_patterns
 
 
 class experiment(object):
@@ -140,6 +142,7 @@ class camera(object):
         self.shutterMode = camera_dict['shutterMode']
         self.compressionMode = camera_dict['compressionMode']
         self.B3Denv = camera_dict['B3Denv']
+        self.expFraction = camera_dict['expFraction']
         self.quantSigma = camera_dict['quantSigma']
 
 
@@ -337,6 +340,11 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
     # SETUP DATA DIRECTORY
     os.makedirs(experiment.drive + ':\\' + experiment.fname)
     dest = experiment.drive + ':\\' + experiment.fname + '\\data.h5'
+
+    # Save a copy of all files in the current directory, i.e. so user can refer to experiment settings and could reproduce experiment entirely
+    src = os.getcwd()
+    settings_rxiv = experiment.drive + ':\\' + experiment.fname + '\\settings and code archive\\'
+    shutil.copytree(src, dst=settings_rxiv, ignore = ignore_patterns('.git')) #Do not copy git repository
 
     #  CONNECT XYZ STAGE
     xyzStage, initialPos = stage.initialize()
