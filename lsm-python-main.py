@@ -28,47 +28,46 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = 'ECi_beads_1024_slit_50_Tdelay_20_VCamp_5_VCoff_-1400_17Hz_120mA'  # file name
+experiment_dict['fname'] = 'ECi_beads_9-29-23-1'  # file name
 
 # ROI PARAMETERS
-experiment_dict['xMin'] = -0.4  # mm
-experiment_dict['xMax'] = 0.4  # mm
-experiment_dict['yMin'] = -0.4  # mm
-experiment_dict['yMax'] = 0.4  # mm
-experiment_dict['zMin'] = 0.15  # mm
-experiment_dict['zMax'] = 0.45  # mm
+experiment_dict['xMin'] = 0.0  # mm
+experiment_dict['xMax'] = 1.0  # mm
+experiment_dict['yMin'] = 0.0  # mm
+experiment_dict['yMax'] = 0.8  # mm
+experiment_dict['zMin'] = 0.0  # mm
+experiment_dict['zMax'] = 0.2  # mm
 
 ################## IMPORTANT!!##################
 # set experiment wavelengths here, current in mA
 ################################################
 
-experiment_dict['wavelengths'] = {#'561': 2050.0,
-                                  '638': 110.0}
+experiment_dict['wavelengths'] = {'638': 103.0}
 
 experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
                                    '488': 6,
                                    '561': 6,
-                                   '638': 6}
+                                   '638': 1000}
 
-daq_dict['p'] = {'405': 0.92,
-                 '488': 0.92,
+daq_dict['p'] = {'405': 1.0,
+                 '488': 1.0,
                  '561': 1.0,
-                 '638': 1.0}
+                 '638': 0.869}
 
 daq_dict['q'] = {'405': 2.29,
                  '488': 2.29,
-                 '561': 2.580,
-                 '638': 2.597}
+                 '561': 2.577,
+                 '638': 2.435}
 
-daq_dict['VCamplitude'] = {'405': 1.15,
-                           '488': 1.15,
+daq_dict['VCamplitude'] = {'405': 0.5,
+                           '488': 0.5,
                            '561': 0.5,
                            '638': 0.5}
 
 daq_dict['VCoffset'] = {'405': -1.65,
-                        '488': -1.65,
+                        '488': -1.1,
                         '561': -1.3,
-                        '638': -1.4}
+                        '638': -2.05}
 
 daq_dict['Tamplitude'] = 3.3
 
