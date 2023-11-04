@@ -17,7 +17,7 @@ stage_dict = static_params['stage']
 # ------ Set user-defined paramters ------ #
 
 # CAMERA PARAMETERS
-camera_dict['freq'] = 17 # Hz, 17 is the max. Use caution when changing
+camera_dict['freq'] = 50 # Hz, 17 is the max. Use caution when changing
 camera_dict['slitSize'] = 50   # number of lines exposed at once in rolling shutter
 
 # B3D compression. 0.0 = off, 1.0 = standard compression
@@ -28,11 +28,12 @@ camera_dict['quantSigma'] = {'405': 1.0,
 
 # FILE PARAMETERS
 experiment_dict['drive'] = 'E'
-experiment_dict['fname'] = 'ECi_beads_9-29-23-1'  # file name
+#experiment_dict['fname'] = 'AFM066_unswept_4mm-NA_256px'  # file name
+experiment_dict['fname'] = 'code_test'
 
 # ROI PARAMETERS
 experiment_dict['xMin'] = 0.0  # mm
-experiment_dict['xMax'] = 1.0  # mm
+experiment_dict['xMax'] = 0.5  # mm
 experiment_dict['yMin'] = 0.0  # mm
 experiment_dict['yMax'] = 0.8  # mm
 experiment_dict['zMin'] = 0.0  # mm
@@ -46,32 +47,33 @@ experiment_dict['wavelengths'] = {'638': 103.0}
 
 experiment_dict['attenuations'] = {'405': 6, # This value should be 2x greater than the max depth in z
                                    '488': 6,
-                                   '561': 6,
+                                   '561': 1000,
                                    '638': 1000}
 
 daq_dict['p'] = {'405': 1.0,
                  '488': 1.0,
                  '561': 1.0,
-                 '638': 0.869}
+                 '638': 1.0}
 
 daq_dict['q'] = {'405': 2.29,
                  '488': 2.29,
-                 '561': 2.577,
-                 '638': 2.435}
+                 '561': 2.445,
+                 '638': 2.447}
 
 daq_dict['VCamplitude'] = {'405': 0.5,
                            '488': 0.5,
-                           '561': 0.5,
-                           '638': 0.5}
+                           '561': 0.0,
+                           '638': 0.0}
 
 daq_dict['VCoffset'] = {'405': -1.65,
                         '488': -1.1,
-                        '561': -1.3,
-                        '638': -2.05}
+                        '561': -1.85,
+                        '638': -2.00}
 
 daq_dict['Tamplitude'] = 3.3
 
-daq_dict['Tdelay'] = 20
+daq_dict['Tdelay'] = 0
+#daq_dict['Tdelay'] = 20
 
 daq_dict['Tduration'] = 1
 

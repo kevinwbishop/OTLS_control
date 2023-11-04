@@ -5,21 +5,30 @@ from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
 um_per_px = 0.376  # microns
+sweeping = False # True or False
+if sweeping:
+    triggerMode = 'external exposure start & software trigger'
+    acquireMode = 'auto'
+else:
+    triggerMode = 'auto sequence'
+    acquireMode = 'external'
+
 
 static_params_write = {
     'camera': {
         'number': 0,  # int e.g. 0
-        'Y': 1024,  # frame size in pixels
+        'Y': 256,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
         'shutterMode': 'UNUSED',
-        'triggerMode': 'external exposure start & software trigger',
-        'acquireMode': 'auto',
+        'triggerMode': triggerMode,
+        'acquireMode': acquireMode,
         'compressionMode': 1,
         'B3Denv': '', # name of required conda env when B3D is active.
                       # e.g. 'image'. Leave as empty string to allow any env.
-        'expFraction': 0.35 # 0 - 1.0. fraction of VC waveform for exposure
-                            # 0.35 is the roughly linear part of a sine wave
+        'expFraction': 0.35, # 0 - 1.0. fraction of VC waveform for exposure
+                             # 0.35 is the roughly linear part of a sine wave
+        'sweeping': sweeping
     },
     'experiment': {
         'overlapZ': 30,
@@ -95,8 +104,8 @@ static_params_write = {
         'names_to_channels': {
             '405': 1,
             '488': 2,
-            '561': 3,
-            '638': 4
+            '561': 4,
+            '638': 5
             }
     },
     'etl': {

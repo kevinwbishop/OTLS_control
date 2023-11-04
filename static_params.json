@@ -1,15 +1,16 @@
 {
     "camera": {
         "number": 0,
-        "Y": 1024,
+        "Y": 256,
         "X": 2048,
         "sampling": 0.376,
         "shutterMode": "UNUSED",
-        "triggerMode": "external exposure start & software trigger",
-        "acquireMode": "auto",
+        "triggerMode": "auto sequence",
+        "acquireMode": "external",
         "compressionMode": 1,
         "B3Denv": "",
-        "expFraction": 0.35
+        "expFraction": 0.35,
+        "sweeping": false
     },
     "experiment": {
         "overlapZ": 30,
@@ -17,7 +18,7 @@
         "theta": 50.0,
         "xWidth": 0.376,
         "yWidth": 0.732448,
-        "zWidth": 0.23620865663195015
+        "zWidth": 0.050592164157987535
     },
     "daq": {
         "rate": 400000.0,
@@ -83,8 +84,8 @@
         "names_to_channels": {
             "405": 1,
             "488": 2,
-            "561": 3,
-            "638": 4
+            "561": 4,
+            "638": 5
         }
     },
     "etl": {

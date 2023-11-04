@@ -97,6 +97,9 @@ class scan(object):
         self.yTiles = int(round(self.yLength/experiment.yWidth))
         self.zTiles = int(round(self.zLength/experiment.zWidth))
 
+        if self.nFrames == 0 or self.yTiles == 0 or self.zTiles == 0:
+            raise Exception("Imaging volume is zero, check imaging bounds")
+
         # setup scan speed and chunk sizes
         self.scanSpeed = self.setScanSpeed(experiment.xWidth, camera.expTime)
         self.chunkSize1 = 256
@@ -144,6 +147,7 @@ class camera(object):
         self.B3Denv = camera_dict['B3Denv']
         self.expFraction = camera_dict['expFraction']
         self.quantSigma = camera_dict['quantSigma']
+        self.sweeping = camera_dict['sweeping']
 
 
 class daq(object):
@@ -385,6 +389,9 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
     cam = pco.Camera(camera_number=camera.number)
 
+    if not camera.sweeping:
+        cam.sdk.set_cmos_line_timing(parameter='off', line_time=0)
+
     cam.configuration = {'exposure time': camera.expTime*1.0e-3, # converting ms (camera.expTime) to sec (pco_cam.configuration{'exposure time})
                          'roi': (1,
                                  1023-round(camera.Y/2),
@@ -394,34 +401,40 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
                          'acquire': camera.acquireMode,
                          'pixel rate': 272250000}
 
-    # parameter='on': turns on light-sheet mode
-    # line_time=20e-6: sets time before going to next line in sec.
-    #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
-    #   17 us is allowed by camera but can introduce artifacts. 20 us seems okay.
-    line_time = (camera.expFraction*1/camera.freq)/camera.Y
-    print('Frequency is:', camera.freq)
-    print('Line time is:', line_time)
-    if line_time < 20e-6:
-        raise Exception('Line time is too small')
+    if camera.sweeping:
+        # parameter='on': turns on light-sheet mode
+        # line_time=20e-6: sets time before going to next line in sec.
+        #   Min values: 17 µs @ 286 MHz (fast scan), 40 µs @ 95.3 MHz (slow scan), Max value: 100ms
+        #   17 us is allowed by camera but can introduce artifacts. 20 us seems okay.
+        line_time = (camera.expFraction*1/camera.freq)/camera.Y
+        print('Frequency is:', camera.freq)
+        print('Line time is:', line_time)
+        if line_time < 20e-6:
+            raise Exception('Line time is too small')
         
-    cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
+        cam.sdk.set_cmos_line_timing(parameter='on', line_time=line_time)
 
-    # lines_exposure: number of lines to expose at once
-    # lines_delay=0: default is zero, not clear what this does yet
-    cam.sdk.set_cmos_line_exposure_delay(lines_exposure=camera.slitSize,lines_delay=0)
+        # lines_exposure: number of lines to expose at once
+        # lines_delay=0: default is zero, not clear what this does yet
+        cam.sdk.set_cmos_line_exposure_delay(lines_exposure=camera.slitSize,lines_delay=0)
 
-    # interface='edge': reverses readout direction. Seems like setting to 'edge' is a requirement
-    # format='top bottom': tells camera to read whole frame top to bottom (as opposed to simultaneously reading two ROIs)
-    cam.sdk.set_interface_output_format(interface='edge',format='top bottom')
+        # interface='edge': reverses readout direction. Seems like setting to 'edge' is a requirement
+        # format='top bottom': tells camera to read whole frame top to bottom (as opposed to simultaneously reading two ROIs)
+        cam.sdk.set_interface_output_format(interface='edge',format='top bottom')
 
-    # Note on set_interface_output_format from SDK manual:
-    # For all cameras with Camera Link interface it is recommended to use PCO_SetTransferParameter function instead of this 
-    # function, because the driver layer must be informed about any changes in readout format to successfully rearrange the 
-    # image data.
+        # Note on set_interface_output_format from SDK manual:
+        # For all cameras with Camera Link interface it is recommended to use PCO_SetTransferParameter function instead of this 
+        # function, because the driver layer must be informed about any changes in readout format to successfully rearrange the 
+        # image data.
 
-    print(cam.sdk.get_cmos_line_exposure_delay())
-    print(cam.sdk.get_cmos_line_timing())
-    print(cam.sdk.get_interface_output_format(interface='edge'))
+
+        print(cam.sdk.get_cmos_line_exposure_delay())
+        print(cam.sdk.get_cmos_line_timing())
+        print(cam.sdk.get_interface_output_format(interface='edge'))    
+
+    #else:
+
+        #### Need to put something here which properly configs cam for non swept mode - evidently something. 
 
     cam.record(number_of_images=session.nFrames, mode='sequence non blocking')
 
@@ -531,8 +544,8 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
                 while num_acquired < session.nFrames - 100:
 
-                    # print('you\'ve got an image!', num_acquired, 'of',
-                    #       session.nFrames, 'total')
+                    print('you\'ve got an image!', num_acquired, 'of',
+                          session.nFrames, 'total')
                     cam.wait_for_next_image(num_acquired)
 
                     if num_acquired_counter == int(session.blockSize):
