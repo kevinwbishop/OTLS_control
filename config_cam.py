@@ -18,8 +18,8 @@ if sys.argv[1] == 'sweep_on':
     triggerMode = 'external exposure start & software trigger'
     acquireMode = 'auto'
     print('**** Important: To preview WITH sweeping in MicroManager,'+
-        ' set Triggermode to External and acquire mode to Internal' +
-        ' before starting live preview ****')
+        ' set Triggermode to External and acquire mode to Internal.' +
+        ' THEN close MicroManager and run this script ****')
 else:
     print('Configuring for sweep OFF')
     triggerMode = 'auto sequence'

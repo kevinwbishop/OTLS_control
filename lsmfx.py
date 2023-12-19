@@ -85,15 +85,18 @@ class scan(object):
     def __init__(self, experiment, camera):
 
         self.xLength = experiment.xMax - experiment.xMin  # mm
+        # yLength is the range in mm rounded to be an integer multiple of tile size
         self.yLength = round((experiment.yMax - experiment.yMin) /
                              experiment.yWidth) * experiment.yWidth  # mm
         self.zLength = round((experiment.zMax - experiment.zMin) /
                              experiment.zWidth) * experiment.zWidth  # mm
         self.xOff = experiment.xMax - self.xLength/2
+        # yOff is max - half of rounded length
         self.yOff = experiment.yMax - self.yLength/2
         self.zOff = experiment.zMin
         self.nFrames = int(np.floor(self.xLength/(experiment.xWidth/1000.0)))
         self.nWavelengths = len(experiment.wavelengths)
+        # yTiles is an integer number of tiles, matching yLength
         self.yTiles = int(round(self.yLength/experiment.yWidth))
         self.zTiles = int(round(self.zLength/experiment.zWidth))
 
@@ -182,6 +185,7 @@ class daq(object):
 
         self.p = daq_dict['p']
         self.q = daq_dict['q']
+        self.Qamp = daq_dict['Qamp']
 
         self.Xamplitude = 0
         self.Xphase = 0
@@ -468,6 +472,7 @@ def scan3D(experiment, camera, daq, laser, wheel, etl, stage):
 
         for k in range(session.yTiles):
 
+            # yPos is max - rounded length + tile_num*width + 0.5*width
             yPos = session.yOff - session.yLength / 2.0 + \
                 k*experiment.yWidth + experiment.yWidth / 2.0
 
@@ -659,9 +664,12 @@ def write_voltages(daq,
     Xoffset = -(daq.p[wave_key]*np.cos(theta) - daq.q[wave_key]*np.sin(theta))
     Yoffset = daq.q[wave_key]*np.cos(theta) + daq.p[wave_key]*np.sin(theta)
 
+    Xamplitude = daq.Qamp[wave_key]*np.sin(theta)
+    Yamplitude = daq.Qamp[wave_key]*np.cos(theta)
+
     # configure X galvo
     # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
-    Xsamples = daq.Xamplitude * np.sin(time - daq.Xphase * ms2time) + Xoffset
+    Xsamples = Xamplitude * np.sin(time - daq.Xphase * ms2time) + Xoffset
 
     if np.amax(Xsamples) > daq.Xmax or np.amin(Xsamples) < daq.Xmin:
         raise Exception('X voltage out of range')
@@ -671,7 +679,7 @@ def write_voltages(daq,
 
     # configure Y galvo
     # writer = stream_writers.AnalogMultiChannelWriter(self.task.out_stream, auto_start = True)
-    Ysamples = daq.Yamplitude * np.sin(time - daq.Yphase * ms2time) + Yoffset
+    Ysamples = Yamplitude * np.sin(time - daq.Yphase * ms2time) + Yoffset
 
     if np.amax(Ysamples) > daq.Ymax or np.amin(Ysamples) < daq.Ymin:
         raise Exception('Y voltage out of range')

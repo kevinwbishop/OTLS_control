@@ -5,7 +5,7 @@ from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 
 # pixel sampling based on index: ~0.43 for water, ~0.373 for ECi
 um_per_px = 0.376  # microns
-sweeping = False # True or False
+sweeping = True # True or False
 if sweeping:
     triggerMode = 'external exposure start & software trigger'
     acquireMode = 'auto'
@@ -17,7 +17,7 @@ else:
 static_params_write = {
     'camera': {
         'number': 0,  # int e.g. 0
-        'Y': 256,  # frame size in pixels
+        'Y': 1024,  # frame size in pixels
         'X': 2048,
         'sampling': um_per_px,
         'shutterMode': 'UNUSED',
@@ -105,7 +105,7 @@ static_params_write = {
             '405': 1,
             '488': 2,
             '561': 4,
-            '638': 5
+            '638': 6
             }
     },
     'etl': {
